@@ -1,0 +1,1 @@
+export const request = "http://localhost:8080/api"
