@@ -1,7 +1,7 @@
 import { LOGIN_FAILURE, LOGIN_SUCCESS, RESET_LOGIN_ERROR } from '../action/authActions';
 
 const initialState = {
-   user: null,
+   img: null,
    token: null,
    error: null,
 };
@@ -9,10 +9,10 @@ const initialState = {
 const authReducer = (state = initialState, action) => {
    switch (action.type) {
       case LOGIN_SUCCESS:
-         return { ...state, user: action.payload.user, token: action.payload.token, error: null };
+         return { ...state, img: action.payload.userImg, token: action.payload.token, error: null };
 
       case LOGIN_FAILURE:
-         return { ...state, user: null, token: null, error: action.payload.error };
+         return { ...state, img: null, token: null, error: action.payload.error };
 
       case RESET_LOGIN_ERROR:
          return { ...state, error: null };

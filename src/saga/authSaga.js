@@ -17,10 +17,21 @@ function* loginUserWorker(action) {
          return;
       }
       const response = yield call(axios.post, 'http://localhost:8080/api/sign-in', { email, password });
-      if(response.data) {
-         const token = response.data.token;
+      if (response.data) {
+         const token = response.data.token;  
+         const img = response.data.img;
+         console.log(response.data);
          localStorage.setItem("token", token);
-         yield put(loginSuccess(token));
+         localStorage.setItem("img", img);
+         const userData = jwtDecode(token);
+         if (userData) {
+            const isAdmin = userData.isAdmin;
+            if (!isAdmin) {
+               yield put(loginFailure("The account does not have access rights"));
+               return;
+            }
+            yield put(loginSuccess(token, img));
+         }
       }
       if (action.payload.onSuccess) {
          action.payload.onSuccess();

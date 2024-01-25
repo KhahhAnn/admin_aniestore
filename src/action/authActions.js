@@ -9,9 +9,9 @@ export const loginRequest = (email, password, onSuccess) => ({
    payload: { email, password, onSuccess},
 });
 
-export const loginSuccess = (token) => ({
+export const loginSuccess = (token, img) => ({
    type: LOGIN_SUCCESS,
-   payload: { token },
+   payload: { token, img },
 });
 
 export const loginFailure = (error) => ({

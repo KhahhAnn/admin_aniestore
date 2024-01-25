@@ -19,10 +19,11 @@ const MainLayout = () => {
    const [email, setEmail] = useState('');
    useEffect(() => {
       const jjwt_token = localStorage.getItem('token');
+      const img = localStorage.getItem('img')
       if (jjwt_token !== null) {
          const userData = jwtDecode(jjwt_token);
          if (userData) {
-            setImg(userData.userImg + "");
+            setImg(img+"");
             setUserName(userData.userName + "");
             setEmail(userData.sub + "");
          }
