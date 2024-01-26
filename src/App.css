@@ -21,3 +21,13 @@
   align-items: center;
   text-align: center;
 }
+.ant-table-content {
+  border-bottom: 1px solid;
+}
+thead, tbody, tfoot, tr, td, th {
+  border-color: inherit;
+  border: 1px solid #000 !important;
+}
+.ant-table-cell {
+  text-align: center !important;
+}
