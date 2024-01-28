@@ -4,13 +4,14 @@ import React, { useEffect, useState } from 'react';
 import { AiOutlineDashboard, AiOutlinePicLeft, AiOutlinePicRight } from "react-icons/ai";
 import { BiCategoryAlt, BiColorFill, BiSolidDiscount } from "react-icons/bi";
 import { CiUser } from "react-icons/ci";
-import { FaClipboardList, FaFileInvoiceDollar } from "react-icons/fa";
+import { FaClipboardList, FaFileInvoiceDollar, FaStoreAlt } from "react-icons/fa";
 import { FaStar } from "react-icons/fa6";
 import { GrCatalogOption, GrUserAdmin } from "react-icons/gr";
 import { ImFontSize } from "react-icons/im";
 import { IoChatboxEllipses, IoNotifications } from "react-icons/io5";
 import { MdEventNote, MdProductionQuantityLimits } from "react-icons/md";
 import { Outlet, useNavigate } from 'react-router-dom';
+
 
 const { Header, Sider, Content } = Layout;
 const MainLayout = () => {
@@ -100,23 +101,6 @@ const MainLayout = () => {
                      key: 'products',
                      icon: <MdProductionQuantityLimits className='fs-4' />,
                      label: 'Products',
-                     children: [
-                        {
-                           key: 'color',
-                           icon: <BiColorFill className='fs-4' />,
-                           label: 'Color',
-                        },
-                        {
-                           key: 'size',
-                           icon: <ImFontSize className='fs-4' />,
-                           label: 'Size',
-                        },
-                        {
-                           key: 'product-list',
-                           icon: <MdProductionQuantityLimits className='fs-4' />,
-                           label: 'Product List',
-                        },
-                     ]
                   },
                   {
                      key: 'message',

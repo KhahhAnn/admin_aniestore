@@ -1,74 +1,65 @@
-import React from 'react';
-import { Table } from 'antd';
-const columns = [
-   {
-      title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
-   },
-   {
-      title: 'Age',
-      dataIndex: 'age',
-      key: 'age',
-   },
-   {
-      title: 'Address',
-      dataIndex: 'address',
-      key: 'address',
-   },
-   {
-      title: 'Action',
-      dataIndex: '',
-      key: 'x',
-      render: () => <a>Delete</a>,
-   },
-];
-const data = [
-   {
-      key: 1,
-      name: 'John Brown',
-      age: 32,
-      address: 'New York No. 1 Lake Park',
-      description: 'My name is John Brown, I am 32 years old, living in New York No. 1 Lake Park.',
-   },
-   {
-      key: 2,
-      name: 'Jim Green',
-      age: 42,
-      address: 'London No. 1 Lake Park',
-      description: 'My name is Jim Green, I am 42 years old, living in London No. 1 Lake Park.',
-   },
-   {
-      key: 3,
-      name: 'Not Expandable',
-      age: 29,
-      address: 'Jiangsu No. 1 Lake Park',
-      description: 'This not expandable',
-   },
-   {
-      key: 4,
-      name: 'Joe Black',
-      age: 32,
-      address: 'Sydney No. 1 Lake Park',
-      description: 'My name is Joe Black, I am 32 years old, living in Sydney No. 1 Lake Park.',
-   },
-];
-const Event = () => (
-   <Table
-      columns={columns}
-      expandable={{
-         expandedRowRender: (record) => (
-            <p
-               style={{
-                  margin: 0,
-               }}
-            >
-               {record.description}
-            </p>  
-         ),
-         rowExpandable: (record) => record.name !== 'Not Expandable',
-      }}
-      dataSource={data}
-   />
-);
+import React, { useEffect, useState } from 'react';
+import { Skeleton, Table } from 'antd';
+import axios from 'axios';
+const Event = () => {
+   const [eventList, setEventList] = useState([]);
+   const [loading, setLoading] = useState(false);
+   const columns = [
+      {
+         title: 'STT',
+         dataIndex: 'stt',
+         key: 'stt',
+      },
+      {
+         title: 'Tên sự kiện',
+         dataIndex: 'eventName',
+         key: 'eventName',
+      },
+      {
+         title: 'Ảnh sự kiện',
+         key: "image",
+         dataIndex: 'image',
+         render: (image) => <img className='table-img' src={image} alt='Ảnh sự kiện'/>,
+      },
+      {
+         title: 'Link sự kiện',
+         dataIndex: 'link',
+         key: 'link',
+      },
+      {
+         title: 'Action',
+         dataIndex: '',
+         key: 'x',
+         render: () => <a>Delete</a>,
+      },
+   ];
+   useEffect(() => {
+      const fetchData = async () => {
+         try {
+            const token = localStorage.getItem("token");
+            const response = await axios.get('http://localhost:8080/event', {
+               headers: {
+                  "Authorization": `Bearer ${token}`
+               }
+            });
+            const eventsWithStt = response.data._embedded.events.reverse().map((event, index) => ({
+               ...event,
+               stt: index + 1,
+            }));
+            setEventList(eventsWithStt);
+            setLoading(true)
+         } catch (error) {
+            console.error('Error fetching color:', error);
+         }
+      };
+      fetchData();
+   }, []);
+   return (
+      <div>
+         {
+            loading ? (<Table columns={columns} dataSource={eventList} />) : (<Skeleton active />)
+         }
+      </div>
+   );
+}
 export default Event;

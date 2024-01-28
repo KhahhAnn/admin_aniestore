@@ -31,3 +31,7 @@ thead, tbody, tfoot, tr, td, th {
 .ant-table-cell {
   text-align: center !important;
 }
+.table-img {
+  width: 150px;
+  height: 150px;
+}

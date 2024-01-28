@@ -1,74 +1,54 @@
-import React from 'react';
-import { Table } from 'antd';
-const columns = [
-   {
-      title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
-   },
-   {
-      title: 'Age',
-      dataIndex: 'age',
-      key: 'age',
-   },
-   {
-      title: 'Address',
-      dataIndex: 'address',
-      key: 'address',
-   },
-   {
-      title: 'Action',
-      dataIndex: '',
-      key: 'x',
-      render: () => <a>Delete</a>,
-   },
-];
-const data = [
-   {
-      key: 1,
-      name: 'John Brown',
-      age: 32,
-      address: 'New York No. 1 Lake Park',
-      description: 'My name is John Brown, I am 32 years old, living in New York No. 1 Lake Park.',
-   },
-   {
-      key: 2,
-      name: 'Jim Green',
-      age: 42,
-      address: 'London No. 1 Lake Park',
-      description: 'My name is Jim Green, I am 42 years old, living in London No. 1 Lake Park.',
-   },
-   {
-      key: 3,
-      name: 'Not Expandable',
-      age: 29,
-      address: 'Jiangsu No. 1 Lake Park',
-      description: 'This not expandable',
-   },
-   {
-      key: 4,
-      name: 'Joe Black',
-      age: 32,
-      address: 'Sydney No. 1 Lake Park',
-      description: 'My name is Joe Black, I am 32 years old, living in Sydney No. 1 Lake Park.',
-   },
-];
-const Category = () => (
-   <Table
-      columns={columns}
-      expandable={{
-         expandedRowRender: (record) => (
-            <p
-               style={{
-                  margin: 0,
-               }}
-            >
-               {record.description}
-            </p>  
-         ),
-         rowExpandable: (record) => record.name !== 'Not Expandable',
-      }}
-      dataSource={data}
-   />
-);
+import React, { useEffect, useState } from 'react';
+import { Skeleton, Table } from 'antd';
+import axios from 'axios';
+const Category = () => {
+   const [categoryList, setCategoryList] = useState([]);
+   const [loading, setLoading] = useState(false);
+   const columns = [
+      {
+         title: 'STT',
+         dataIndex: 'stt',
+         key: 'stt',
+      },
+      {
+         title: 'Tên loại sản phẩm',
+         dataIndex: 'categoryName',
+         key: 'categoryName',
+      },
+      {
+         title: 'Action',
+         dataIndex: '',
+         key: 'x',
+         render: () => <a>Delete</a>,
+      },
+   ];
+   useEffect(() => {
+      const fetchData = async () => {
+         try {
+            const token = localStorage.getItem("token");
+            const response = await axios.get('http://localhost:8080/category', {
+               headers: {
+                  "Authorization": `Bearer ${token}`
+               }
+            });
+            const categoryWithStt = response.data._embedded.categories.reverse().map((category, index) => ({
+               ...category,
+               stt: index + 1,
+            }));
+            setCategoryList(categoryWithStt);
+            setLoading(true)
+         } catch (error) {
+            console.error('Error fetching color:', error);
+         }
+      };
+      fetchData();
+   }, []);
+   return (
+      <div>
+         {
+            loading ? (<Table columns={columns} dataSource={categoryList} />) : (<Skeleton active />)
+         }
+      </div>
+   );
+};
 export default Category;

@@ -1,74 +1,64 @@
-import React from 'react';
-import { Table } from 'antd';
-const columns = [
-   {
-      title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
-   },
-   {
-      title: 'Age',
-      dataIndex: 'age',
-      key: 'age',
-   },
-   {
-      title: 'Address',
-      dataIndex: 'address',
-      key: 'address',
-   },
-   {
-      title: 'Action',
-      dataIndex: '',
-      key: 'x',
-      render: () => <a>Delete</a>,
-   },
-];
-const data = [
-   {
-      key: 1,
-      name: 'John Brown',
-      age: 32,
-      address: 'New York No. 1 Lake Park',
-      description: 'My name is John Brown, I am 32 years old, living in New York No. 1 Lake Park.',
-   },
-   {
-      key: 2,
-      name: 'Jim Green',
-      age: 42,
-      address: 'London No. 1 Lake Park',
-      description: 'My name is Jim Green, I am 42 years old, living in London No. 1 Lake Park.',
-   },
-   {
-      key: 3,
-      name: 'Not Expandable',
-      age: 29,
-      address: 'Jiangsu No. 1 Lake Park',
-      description: 'This not expandable',
-   },
-   {
-      key: 4,
-      name: 'Joe Black',
-      age: 32,
-      address: 'Sydney No. 1 Lake Park',
-      description: 'My name is Joe Black, I am 32 years old, living in Sydney No. 1 Lake Park.',
-   },
-];
-const ImportInvoice = () => (
-   <Table
-      columns={columns}
-      expandable={{
-         expandedRowRender: (record) => (
-            <p
-               style={{
-                  margin: 0,
-               }}
-            >
-               {record.description}
-            </p>  
-         ),
-         rowExpandable: (record) => record.name !== 'Not Expandable',
-      }}
-      dataSource={data}
-   />
-);
+import React, { useEffect, useState } from 'react';
+import { Skeleton, Table } from 'antd';
+import axios from 'axios';
+const ImportInvoice = () => {
+   const [invoiceList, setInvoiceList] = useState([]);
+   const [loading, setLoading] = useState(false);
+   const columns = [
+      {
+         title: 'STT',
+         dataIndex: 'stt',
+         key: 'stt',
+      },
+      {
+         title: 'Tên hóa đơn nhập',
+         dataIndex: 'invoiceName',
+         key: 'invoiceName',
+      },
+      {
+         title: 'Ngày nhập',
+         key: "importDate",
+         dataIndex: 'importDate',
+      },
+      {
+         title: 'Tổng tiền hóa đơn',
+         dataIndex: 'total_price',
+         key: 'total_price',
+      },
+      {
+         title: 'Action',
+         dataIndex: '',
+         key: 'x',
+         render: () => <a>Delete</a>,
+      },
+   ];
+   useEffect(() => {
+      const fetchData = async () => {
+         try {
+            const token = localStorage.getItem("token");
+            const response = await axios.get('http://localhost:8080/import-invoice', {
+               headers: {
+                  "Authorization": `Bearer ${token}`
+               }
+            });
+            const invoiceWithStt = response.data._embedded.importInvoices.reverse().map((invoice, index) => ({
+               ...invoice,
+               stt: index + 1,
+            }));
+            setInvoiceList(invoiceWithStt);
+            setLoading(true)
+         } catch (error) {
+            console.error('Error fetching color:', error);
+         }
+      };
+      fetchData();
+   }, []);
+   return (
+      <div>
+         {
+            loading ? (<Table columns={columns} dataSource={invoiceList} />) : (<Skeleton active />)
+         }
+      </div>
+   );
+};
 export default ImportInvoice;
