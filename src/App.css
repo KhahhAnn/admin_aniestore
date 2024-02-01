@@ -35,3 +35,9 @@ thead, tbody, tfoot, tr, td, th {
   width: 150px;
   height: 150px;
 }
+.button-delete {
+  margin-right: 10px;
+}
+.button-edit {
+  margin-left: 10px;
+}

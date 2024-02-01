@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Skeleton, Table } from 'antd';
+import { Button, Popconfirm, Skeleton, Table } from 'antd';
 import axios from 'axios';
 const Order = () => {
    const [orderList, setOrderList] = useState([]);
@@ -32,30 +32,61 @@ const Order = () => {
       },
       {
          title: 'Action',
-         dataIndex: '',
+         dataIndex: 'id',
          key: 'x',
-         render: () => <a>Delete</a>,
+         render: (id) =>
+            <div>
+               <Popconfirm
+                  title="Delete the task"
+                  description="Are you sure to delete this task?"
+                  okText="Yes"
+                  cancelText="No"
+                  onConfirm={() => confirm(id)}
+               >
+                  <Button danger className='button-delete'>Delete</Button>
+               </Popconfirm>
+               <Button type="primary" className='button-edit'>Edit</Button>
+            </div>
       },
    ];
+   const confirm = (id) => {
+      handleDelete(id)
+   };
+   const handleDelete = async (id) => {
+      try {
+         setLoading(false);
+         const token = localStorage.getItem("token");
+         const response = await axios.delete(`http://localhost:8080/api/discount/${id}`, {
+            headers: {
+               "Authorization": `Bearer ${token}`
+            }
+         });
+         console.log(response);
+         setLoading(true)
+         fetchData();
+      } catch (error) {
+         console.log(error);
+      }
+   }
+   const fetchData = async () => {
+      try {
+         const token = localStorage.getItem("token");
+         const response = await axios.get('http://localhost:8080/order', {
+            headers: {
+               "Authorization": `Bearer ${token}`
+            }
+         });
+         const orderWithStt = response.data._embedded.orders.reverse().map((order, index) => ({
+            ...order,
+            stt: index + 1,
+         }));
+         setOrderList(orderWithStt);
+         setLoading(true)
+      } catch (error) {
+         console.error('Error fetching color:', error);
+      }
+   };
    useEffect(() => {
-      const fetchData = async () => {
-         try {
-            const token = localStorage.getItem("token");
-            const response = await axios.get('http://localhost:8080/order', {
-               headers: {
-                  "Authorization": `Bearer ${token}`
-               }
-            });
-            const orderWithStt = response.data._embedded.orders.reverse().map((order, index) => ({
-               ...order,
-               stt: index + 1,
-            }));
-            setOrderList(orderWithStt);
-            setLoading(true)
-         } catch (error) {
-            console.error('Error fetching color:', error);
-         }
-      };
       fetchData();
    }, []);
    return (

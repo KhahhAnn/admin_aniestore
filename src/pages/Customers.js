@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table } from 'antd';
+import { Button, Table } from 'antd';
 import axios from 'axios';
 import { Skeleton } from 'antd';
 
@@ -54,36 +54,57 @@ const Customers = () => {
       },
       {
          title: 'Kích hoạt',
-         dataIndex: 'isActive',
-         key: 'isActive',
-         render: (isActive) => (isActive ? 'Đã kích hoạt' : 'Chưa kích hoạt'),
+         dataIndex: 'active',
+         key: 'active',
+         render: (active) => (active ? 'Đã kích hoạt' : 'Chưa kích hoạt'),
       },
       {
          title: 'Action',
-         dataIndex: '',
+         dataIndex: 'id',
          key: 'x',
-         render: () => <a>Edit</a>,
+         render: (id) =>
+            <div>
+               <Button danger className='button-delete' onClick={() => handleDelete(id)}>Delete</Button>
+               <Button type="primary" className='button-edit'>Edit</Button>
+            </div>
+         ,
       },
    ];
+   const handleDelete = async (id) => {
+      try {
+         setLoading(false);
+         const token = localStorage.getItem("token");
+         const response = await axios.delete(`http://localhost:8080/api/user/${id}`, {
+            headers: {
+               "Authorization": `Bearer ${token}`
+            }
+         });
+         console.log(response);
+         setLoading(true)
+         fetchData();
+      } catch (error) {
+         console.log(error);
+      }
+   }
+   const fetchData = async () => {
+      try {
+         const token = localStorage.getItem("token");
+         const response = await axios.get('http://localhost:8080/user', {
+            headers: {
+               "Authorization": `Bearer ${token}`
+            }
+         });
+         const usersWithStt = response.data._embedded.userses.reverse().map((user, index) => ({
+            ...user,
+            stt: index + 1,
+         }));
+         setUserList(usersWithStt);
+         setLoading(true)
+      } catch (error) {
+         console.error('Error fetching reviews:', error);
+      }
+   };
    useEffect(() => {
-      const fetchData = async () => {
-         try {
-            const token = localStorage.getItem("token");
-            const response = await axios.get('http://localhost:8080/user', {
-               headers: {
-                  "Authorization": `Bearer ${token}`
-               }
-            });
-            const usersWithStt = response.data._embedded.userses.reverse().map((user, index) => ({
-               ...user,
-               stt: index + 1,
-            }));
-            setUserList(usersWithStt);
-            setLoading(true)
-         } catch (error) {
-            console.error('Error fetching reviews:', error);
-         }
-      };
       fetchData();
    }, []);
    return (
