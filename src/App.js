@@ -14,6 +14,11 @@ import Order from './pages/Order';
 import Products from './pages/Products';
 import ResetPassword from './pages/ResetPassword';
 import Review from './pages/Review';
+import AddCategory from './pages/addPages/addCategory';
+import AddDiscount from './pages/addPages/AddDiscount';
+import AddEvent from './pages/addPages/addEvent';
+import AddProduct from './pages/addPages/AddProduct';
+import AddImportInvoice from './pages/addPages/AddImportInvoice';
 
 function App() {
   return (
@@ -33,6 +38,11 @@ function App() {
           <Route path='order' element={<Order />} />
           <Route path='products' element={<Products />} />
           <Route path='discount' element={<Discount />} />
+          <Route path='add-category' element={<AddCategory />} />
+          <Route path='add-discount' element={<AddDiscount />} />
+          <Route path='add-event' element={<AddEvent />} />
+          <Route path='add-product' element={<AddProduct />} />
+          <Route path='add-invoice' element={<AddImportInvoice />} />
         </Route>
       </Routes>
     </Router>

@@ -43,11 +43,6 @@ const Customers = () => {
          key: 'gender',
       },
       {
-         title: 'Tên hiển thị',
-         dataIndex: 'userName',
-         key: 'userName',
-      },
-      {
          title: 'Email',
          dataIndex: 'email',
          key: 'email',
@@ -64,28 +59,11 @@ const Customers = () => {
          key: 'x',
          render: (id) =>
             <div>
-               <Button danger className='button-delete' onClick={() => handleDelete(id)}>Delete</Button>
                <Button type="primary" className='button-edit'>Edit</Button>
             </div>
          ,
       },
    ];
-   const handleDelete = async (id) => {
-      try {
-         setLoading(false);
-         const token = localStorage.getItem("token");
-         const response = await axios.delete(`http://localhost:8080/api/user/${id}`, {
-            headers: {
-               "Authorization": `Bearer ${token}`
-            }
-         });
-         console.log(response);
-         setLoading(true)
-         fetchData();
-      } catch (error) {
-         console.log(error);
-      }
-   }
    const fetchData = async () => {
       try {
          const token = localStorage.getItem("token");
@@ -111,22 +89,25 @@ const Customers = () => {
       <>
          {
             loading ? (
-               <Table
-                  columns={columns}
-                  expandable={{
-                     expandedRowRender: (record) => (
-                        <p
-                           style={{
-                              margin: 0,
-                           }}
-                        >
-                           {"Họ và tên: " + record.firstName + " " + record.lastName + " - Địa chỉ: " + record.address + " - Số điện thoại: " + record.phoneNum}
-                        </p>
-                     ),
-                     rowExpandable: (record) => record.name !== 'Not Expandable',
-                  }}
-                  dataSource={userList}
-               />
+               <div>
+                  <button type="button" class="btn btn-success mb-3">Add Customers</button>
+                  <Table
+                     columns={columns}
+                     expandable={{
+                        expandedRowRender: (record) => (
+                           <p
+                              style={{
+                                 margin: 0,
+                              }}
+                           >
+                              {"Họ và tên: " + record.firstName + " " + record.lastName + " - Địa chỉ: " + record.address + " - Số điện thoại: " + record.phoneNum}
+                           </p>
+                        ),
+                        rowExpandable: (record) => record.name !== 'Not Expandable',
+                     }}
+                     dataSource={userList}
+                  />
+               </div>
             ) : (<Skeleton active />)
          }
       </>

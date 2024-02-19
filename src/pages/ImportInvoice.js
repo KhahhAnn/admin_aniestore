@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Skeleton, Table, Popconfirm } from 'antd';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 const ImportInvoice = () => {
    const [invoiceList, setInvoiceList] = useState([]);
    const [loading, setLoading] = useState(false);
@@ -87,7 +88,13 @@ const ImportInvoice = () => {
    return (
       <div>
          {
-            loading ? (<Table columns={columns} dataSource={invoiceList} />) : (<Skeleton active />)
+            loading ? 
+            (
+               <div>
+                  <Link to="../add-invoice"><button type="button" class="btn btn-success mb-3">Add Import Invoice</button></Link>
+                  <Table columns={columns} dataSource={invoiceList} />
+               </div>
+            ) : (<Skeleton active />)
          }
       </div>
    );

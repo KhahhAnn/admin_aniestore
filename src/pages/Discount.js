@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Popconfirm, Skeleton, Table } from 'antd';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 
 const Discount = () => {
    const [discountList, setDiscountList] = useState([]);
@@ -94,7 +95,14 @@ const Discount = () => {
    return (
       <div>
          {
-            loading ? <Table columns={columns} dataSource={discountList} /> : <Skeleton active />
+            loading ?
+               (
+                  <div>
+                     <Link to="../add-discount"><button type="button" class="btn btn-success mb-3">Add Discount</button></Link>
+                     <Table columns={columns} dataSource={discountList} />
+                  </div>
+               )
+               : <Skeleton active />
          }
       </div>
    );

@@ -1,6 +1,7 @@
 import { Button, Skeleton, Table } from 'antd';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 const Category = () => {
    const [categoryList, setCategoryList] = useState([]);
    const [loading, setLoading] = useState(false);
@@ -67,7 +68,13 @@ const Category = () => {
    return (
       <div>
          {
-            loading ? (<Table columns={columns} dataSource={categoryList} />) : (<Skeleton active />)
+            loading ? 
+            (
+               <div>
+                  <Link to="../add-category"> <button type="button" class="btn btn-success mb-3">Add Category</button> </Link>
+                  <Table columns={columns} dataSource={categoryList} />
+               </div>
+            ) : (<Skeleton active />)
          }
       </div>
    );

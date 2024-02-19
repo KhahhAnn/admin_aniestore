@@ -24,6 +24,7 @@ const Order = () => {
          title: 'Trạng thái đơn hàng',
          key: "status",
          dataIndex: 'status',
+         render: (status) => (status ? "Đã hoàn thành" : "Chưa hoàn thành")
       },
       {
          title: 'Tổng tiền hóa đơn',
@@ -83,6 +84,7 @@ const Order = () => {
          setOrderList(orderWithStt);
          setLoading(true)
       } catch (error) {
+         setLoading(true)
          console.error('Error fetching color:', error);
       }
    };
@@ -92,7 +94,13 @@ const Order = () => {
    return (
       <div>
          {
-            loading ? (<Table columns={columns} dataSource={orderList} />) : (<Skeleton active />)
+            loading ? 
+            (
+               <div>
+                  <button type="button" class="btn btn-success mb-3">Add Order</button>
+                  <Table columns={columns} dataSource={orderList} />
+               </div>
+            ) : (<Skeleton active />)
          }
       </div>
    );

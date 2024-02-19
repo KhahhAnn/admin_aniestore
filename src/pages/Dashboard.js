@@ -1,95 +1,130 @@
 import { Column } from '@ant-design/plots';
-import { Table } from 'antd';
-import React from 'react';
+import { Button, Popconfirm, Table, Skeleton } from 'antd';
+import axios from 'axios';
+import React, { useEffect, useState } from 'react';
 import { FaArrowTrendDown, FaArrowTrendUp } from "react-icons/fa6";
-const columns = [
-   {
-      title: 'SNo',
-      dataIndex: 'key',
-   },
-   {
-      title: 'Name',
-      dataIndex: 'name',
-   },
-   {
-      title: 'Product',
-      dataIndex: 'product',
-   },
-   {
-      title: 'Status',
-      dataIndex: 'status',
-   },
-];
-const data1 = [];
-for (let i = 0; i < 46; i++) {
-   data1.push({
-      key: i,
-      name: `Edward King ${i}`,
-      product: 32,
-      status: `London, Park Lane no. ${i}`,
-   });
-}
 const Dashboard = () => {
-   const data = [
+   const [orderList, setOrderList] = useState([]);
+   const [loading, setLoading] = useState(false);
+   const columns = [
       {
-         type: 'Tháng 1',
-         sales: 38,
+         title: 'STT',
+         dataIndex: 'stt',
+         key: 'stt',
       },
       {
-         type: 'Tháng 2',
-         sales: 52,
+         title: 'Tên hóa đơn bán',
+         dataIndex: 'orderName',
+         key: 'orderName',
       },
       {
-         type: 'Tháng 3',
-         sales: 61,
+         title: 'Ngày bán',
+         key: "orderDate",
+         dataIndex: 'orderDate',
       },
       {
-         type: 'Tháng 4',
-         sales: 145,
+         title: 'Trạng thái đơn hàng',
+         key: "status",
+         dataIndex: 'status',
+         render: (status) => (status ? "Đã hoàn thành" : "Chưa hoàn thành")
       },
       {
-         type: 'Tháng 5',
-         sales: 48,
+         title: 'Tổng tiền hóa đơn',
+         dataIndex: 'total',
+         key: 'total',
       },
       {
-         type: 'Tháng 6',
-         sales: 38,
-      },
-      {
-         type: 'Tháng 7',
-         sales: 38,
-      },
-      {
-         type: 'Tháng 8',
-         sales: 38,
-      },
-      {
-         type: 'Tháng 9',
-         sales: 40,
-      },
-      {
-         type: 'Tháng 10',
-         sales: 58,
-      },
-      {
-         type: 'Tháng 11',
-         sales: 18,
-      },
-      {
-         type: 'Tháng 12',
-         sales: 200,
+         title: 'Action',
+         dataIndex: 'id',
+         key: 'x',
+         render: (id) =>
+            <div>
+               <Popconfirm
+                  title="Delete the task"
+                  description="Are you sure to delete this task?"
+                  okText="Yes"
+                  cancelText="No"
+                  onConfirm={() => confirm(id)}
+               >
+                  <Button danger className='button-delete'>Delete</Button>
+               </Popconfirm>
+               <Button type="primary" className='button-edit'>Edit</Button>
+            </div>
       },
    ];
+   const confirm = (id) => {
+      handleDelete(id)
+   };
+   const handleDelete = async (id) => {
+      try {
+         setLoading(false);
+         const token = localStorage.getItem("token");
+         const response = await axios.delete(`http://localhost:8080/api/discount/${id}`, {
+            headers: {
+               "Authorization": `Bearer ${token}`
+            }
+         });
+         console.log(response);
+         setLoading(true)
+         fetchData();
+      } catch (error) {
+         console.log(error);
+      }
+   }
+   const fetchData = async () => {
+      try {
+         const token = localStorage.getItem("token");
+         const response = await axios.get('http://localhost:8080/order', {
+            headers: {
+               "Authorization": `Bearer ${token}`
+            }
+         });
+         const orderWithStt = response.data._embedded.orders.reverse().map((order, index) => ({
+            ...order,
+            stt: index + 1,
+         }));
+         setOrderList(orderWithStt);
+         setLoading(true)
+      } catch (error) {
+         setLoading(true)
+         console.error('Error fetching color:', error);
+      }
+   };
+   useEffect(() => {
+      fetchData();
+   }, []);
+   console.log(Array.isArray(orderList));
+   console.log(orderList);
+   const groupOrdersByMonth = (orderList) => {
+      const groupedOrders = {};
+      orderList.forEach(order => {
+         const orderDate = new Date(order.orderDate);
+         const monthYear = orderDate.getMonth() + 1 + '/' + orderDate.getFullYear();
+         if (!groupedOrders[monthYear]) {
+            groupedOrders[monthYear] = {
+               orderDate: monthYear,
+               total: order.total
+            };
+         } else {
+            groupedOrders[monthYear].total += order.total;
+         }
+      });
+
+      return Object.values(groupedOrders);
+   };
+
+   const data = groupOrdersByMonth(orderList);
+
    const config = {
       data,
-      xField: 'type',
-      yField: 'sales',
+      xField: 'orderDate',
+      yField: 'total',
       color: "#ffd333",
       label: {
          position: 'top',
          style: {
             fill: '#FFFFFF',
-            opacity: 1,
+            opacity: 0.6,
          },
       },
       xAxis: {
@@ -140,15 +175,19 @@ const Dashboard = () => {
             </div>
          </div>
          <div className='mt-4'>
-            <h3 className='mb-4'>Tiền lãi 2023($)</h3>
+            <h3 className='mb-4'>Tiền lãi 2024($)</h3>
             <div>
-               <Column {...config} />
+            {
+                  loading ? (<Column {...config} />) : (<Skeleton active />)
+               }
             </div>
          </div>
          <div className='mt-4'>
             <h3 className='mb-4'>Danh sách order</h3>
             <div>
-               <Table columns={columns} dataSource={data1} />
+               {
+                  loading ? (<Table columns={columns} dataSource={orderList} />) : (<Skeleton active />)
+               }
             </div>
          </div>
       </div>

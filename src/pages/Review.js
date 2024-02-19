@@ -108,6 +108,7 @@ const Review = () => {
          });
          setLoading(true)
       } catch (error) {
+         setLoading(true)
          console.log('Error fetching reviews:', error);
       }
    };
@@ -117,18 +118,15 @@ const Review = () => {
 
    return (
       <>
-         {loading ? (
+         {
+         loading ? 
+         (
             <div>
-               <div className='mt-4'>
-                  <h3 className='mb-4'>Danh sách review</h3>
-                  <div>
-                     <Table columns={columns} dataSource={reviewList} />
-                  </div>
-               </div>
+               <button type="button" class="btn btn-success mb-3">Add Review</button>
+               <Table columns={columns} dataSource={reviewList} />
             </div>
-         ) : (
-            <Skeleton active />
-         )}
+         ) : (<Skeleton active />)
+         }
       </>
    );
 

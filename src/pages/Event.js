@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { Button, Skeleton, Table, Popconfirm, message } from 'antd';
+import { Button, Popconfirm, Skeleton, Table } from 'antd';
 import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 const Event = () => {
    const [eventList, setEventList] = useState([]);
    const [loading, setLoading] = useState(false);
@@ -37,7 +38,7 @@ const Event = () => {
                   description="Are you sure to delete this task?"
                   okText="Yes"
                   cancelText="No"
-                  onConfirm={()=>confirm(id)}
+                  onConfirm={() => confirm(id)}
                >
                   <Button danger className='button-delete'>Delete</Button>
                </Popconfirm>
@@ -89,7 +90,13 @@ const Event = () => {
    return (
       <div>
          {
-            loading ? (<Table columns={columns} dataSource={eventList} />) : (<Skeleton active />)
+            loading ? 
+            (
+               <div>
+                  <Link to="../add-event"><button type="button" class="btn btn-success mb-3">Add Event</button></Link>
+                  <Table columns={columns} dataSource={eventList} />
+               </div>
+            ) : (<Skeleton active />)
          }
       </div>
    );
