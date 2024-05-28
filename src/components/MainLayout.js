@@ -128,6 +128,7 @@ const MainLayout = () => {
                      icon: <ImExit  className='fs-4' />,
                      label: 'Log out',
                      onClick: handleLogout,
+                     style: {marginTop: "350px"}
                   },
                ]}
             />

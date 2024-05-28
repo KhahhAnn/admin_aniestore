@@ -64,12 +64,23 @@ const Dashboard = () => {
    };
 
    const formatOrderData = (orders) => {
-      const chartData = orders.map(order => ({
-         date: order.orderDate,
-         value: order.totalDiscountedPrice 
+      const aggregatedData = orders.reduce((acc, order) => {
+         const date = order.orderDate;
+         if (!acc[date]) {
+            acc[date] = 0;
+         }
+         acc[date] += order.totalDiscountedPrice;
+         return acc;
+      }, {});
+
+      const chartData = Object.keys(aggregatedData).map(date => ({
+         date,
+         value: aggregatedData[date]
       }));
+
       setChartData(chartData);
    };
+
 
    useEffect(() => {
       fetchData();

@@ -18,6 +18,7 @@ import AddImportInvoice from './pages/addPages/AddImportInvoice';
 import AddProduct from './pages/addPages/AddProduct';
 import AddCategory from './pages/addPages/addCategory';
 import AddEvent from './pages/addPages/addEvent';
+import PrivateRoute from './components/PrivateRoute';
 
 function App() {
   return (
@@ -26,7 +27,14 @@ function App() {
         <Route path='/' element={<Login />} />
         <Route path='reset-password' element={<ResetPassword />} />
         <Route path='/forgot-password' element={<ForgotPassword />} />
-        <Route path='/admin/*' element={<MainLayout />}>
+        <Route
+          path='/admin/*'
+          element={
+            <PrivateRoute>
+              <MainLayout />
+            </PrivateRoute>
+          }
+        >
           <Route index element={<Dashboard />} />
           <Route path='review' element={<Review />} />
           <Route path='category' element={<Category />} />

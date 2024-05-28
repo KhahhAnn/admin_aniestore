@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Popconfirm, Skeleton, Table } from 'antd';
+import { Button, Popconfirm, Skeleton, Table, Modal, Form, Input, Select } from 'antd';
 import axios from 'axios';
 import ReactECharts from 'echarts-for-react';
+
+const { Option } = Select;
 
 const Order = () => {
    const [orderList, setOrderList] = useState([]);
    const [loading, setLoading] = useState(false);
+   const [isModalVisible, setIsModalVisible] = useState(false);
+   const [editingOrder, setEditingOrder] = useState(null);
+   const [form] = Form.useForm();
    const [orderStatusData, setOrderStatusData] = useState([]);
    const [totalOrders, setTotalOrders] = useState(0);
-
 
    const columns = [
       {
@@ -56,7 +60,7 @@ const Order = () => {
                >
                   <Button danger className='button-delete'>Delete</Button>
                </Popconfirm>
-               <Button type="primary" className='button-edit'>Edit</Button>
+               <Button type="primary" className='button-edit' onClick={() => showEditModal(orderId)}>Edit</Button>
             </div>
          ),
       },
@@ -82,6 +86,7 @@ const Order = () => {
          console.log(error);
       }
    }
+
    const fetchData = async () => {
       try {
          setLoading(false);
@@ -92,7 +97,7 @@ const Order = () => {
             }
          });
          const orders = response.data._embedded.orders;
-         const orderWithStt = response.data._embedded.orders.reverse().map((order, index) => ({
+         const orderWithStt = orders.reverse().map((order, index) => ({
             ...order,
             stt: index + 1,
          }));
@@ -103,7 +108,6 @@ const Order = () => {
             return acc;
          }, {});
 
-         // Tạo dữ liệu cho biểu đồ
          const data = Object.keys(statusCounts).map((status) => ({
             value: statusCounts[status],
             name: status,
@@ -121,6 +125,33 @@ const Order = () => {
    useEffect(() => {
       fetchData();
    }, []);
+
+   const showEditModal = (orderId) => {
+      const order = orderList.find(order => order.orderId === orderId);
+      setEditingOrder(order);
+      form.setFieldsValue(order);
+      setIsModalVisible(true);
+   };
+
+   const handleCancel = () => {
+      setIsModalVisible(false);
+   };
+
+   const handleOk = async () => {
+      try {
+         const updatedOrder = form.getFieldsValue();
+         const token = localStorage.getItem("token");
+         await axios.put(`http://localhost:8080/order/${editingOrder.orderId}`, updatedOrder, {
+            headers: {
+               "Authorization": `Bearer ${token}`
+            }
+         });
+         setOrderList(prevList => prevList.map(order => order.orderId === editingOrder.orderId ? { ...order, ...updatedOrder } : order));
+         setIsModalVisible(false);
+      } catch (error) {
+         console.error('Error updating order:', error);
+      }
+   };
 
    const option = {
       title: {
@@ -161,6 +192,33 @@ const Order = () => {
                   <div>
                      <ReactECharts option={option} style={{ height: '300px' }} />
                      <Table columns={columns} dataSource={orderList} />
+                     <Modal
+                        title="Edit Order"
+                        visible={isModalVisible}
+                        onOk={handleOk}
+                        onCancel={handleCancel}
+                     >
+                        <Form form={form} layout="vertical">
+                           <Form.Item name="orderId" label="Id đơn hàng">
+                              <Input disabled />
+                           </Form.Item>
+                           <Form.Item name="orderDate" label="Ngày bán">
+                              <Input />
+                           </Form.Item>
+                           <Form.Item name="orderStatus" label="Trạng thái đơn hàng">
+                              <Select>
+                                 <Option value="Chưa xác nhận đơn">Chưa xác nhận đơn</Option>
+                                 <Option value="Đã xác nhận đơn">Đã xác nhận đơn</Option>
+                                 <Option value="Đơn hàng đang vận chuyển">Đơn hàng đang vận chuyển</Option>
+                                 <Option value="Đã giao">Đã giao</Option>
+                                 <Option value="Nhận hàng thành công">Nhận hàng thành công</Option>
+                              </Select>
+                           </Form.Item>
+                           <Form.Item name="totalDiscountedPrice" label="Tổng tiền hóa đơn">
+                              <Input />
+                           </Form.Item>
+                        </Form>
+                     </Modal>
                   </div>
                ) : (<Skeleton active />)
          }
