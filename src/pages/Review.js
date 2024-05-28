@@ -1,11 +1,8 @@
-import { Button, Popconfirm, Table } from 'antd';
+import { Button, Popconfirm, Table, Skeleton } from 'antd';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-import { Skeleton } from 'antd';
-
 
 const Review = () => {
-
    const columns = [
       {
          title: 'STT',
@@ -13,11 +10,11 @@ const Review = () => {
       },
       {
          title: 'Nội dung',
-         dataIndex: 'contentRated',
+         dataIndex: 'review',
       },
       {
          title: 'Số sao đánh giá',
-         dataIndex: 'star',
+         dataIndex: 'starsNumber',
       },
       {
          title: 'Sản phẩm',
@@ -31,7 +28,7 @@ const Review = () => {
          title: 'Action',
          dataIndex: 'id',
          key: 'x',
-         render: (id) =>
+         render: (id) => (
             <div>
                <Popconfirm
                   title="Delete the task"
@@ -44,8 +41,10 @@ const Review = () => {
                </Popconfirm>
                <Button type="primary" className='button-edit'>Edit</Button>
             </div>
+         ),
       },
    ];
+   
    const [reviewList, setReviewList] = useState([]);
    const [loading, setLoading] = useState(false);
 
@@ -64,9 +63,11 @@ const Review = () => {
          console.log(error);
       }
    }
+   
    const confirm = (id) => {
-      handleDelete(id)
+      handleDelete(id);
    };
+
    const fetchData = async () => {
       try {
          const token = localStorage.getItem("token");
@@ -75,61 +76,69 @@ const Review = () => {
                "Authorization": `Bearer ${token}`
             }
          });
+         console.log(response.data);
+         
          const reviewListWithStt = response.data._embedded.reviews.reverse().map((review, index) => ({
             ...review,
             stt: index + 1,
-            userEmail: review._links.user.href,
-            productName: review._links.products.href
+            id: review._links.self.href.split('/').pop(),
          }));
-         setReviewList(reviewListWithStt);
 
-         const userLinks = response.data._embedded.reviews.map(review => review._links.user.href);
-         const productLinks = response.data._embedded.reviews.map(review => review._links.products.href);
+         const userLinks = reviewListWithStt.map(review => review._links.user.href);
+         const productLinks = reviewListWithStt.map(review => review._links.product.href);
+
          const userEmailPromises = userLinks.map(link => axios.get(link, {
             headers: {
                "Authorization": `Bearer ${token}`
             }
          }));
-         const userEmails = await Promise.all(userEmailPromises);
-         userEmails.forEach((response, index) => {
-            const userEmail = response.data.email;
-            setReviewList(prevState => prevState.map((review, i) => (i === index ? { ...review, userEmail } : review)));
+         
+         const productPromises = productLinks.map(link => axios.get(link, {
+            headers: {
+               "Authorization": `Bearer ${token}`
+            }
+         }));
+
+         console.log(productPromises);
+         const [userEmails, products] = await Promise.all([
+            Promise.all(userEmailPromises),
+            Promise.all(productPromises)
+         ]);
+
+         products.forEach((response, index) => {
+            console.log('Product Response:', response.data); // Log product response
          });
-         const productsPromises = productLinks.map(link =>
-            axios.get(link, {
-               headers: {
-                  "Authorization": `Bearer ${token}`
-               }
-            }));
-         const productsName = await Promise.all(productsPromises);
-         productsName.forEach((response, index) => {
-            const productName = response.data.productName;
-            setReviewList(prevState => prevState.map((review, i) => (i === index ? { ...review, productName } : review)));
-         });
-         setLoading(true)
+
+         const updatedReviews = reviewListWithStt.map((review, index) => ({
+            ...review,
+            userEmail: userEmails[index].data.email,
+            productName: products[index].data.title,
+         }));
+
+         setReviewList(updatedReviews);
+         setLoading(true);
       } catch (error) {
-         setLoading(true)
+         setLoading(true);
          console.log('Error fetching reviews:', error);
       }
    };
+
    useEffect(() => {
       fetchData();
-   }, [])
+   }, []);
 
    return (
       <>
-         {
-         loading ? 
-         (
+         {loading ? (
             <div>
-               <button type="button" class="btn btn-success mb-3">Add Review</button>
+               <Button type="button" className="btn btn-success mb-3">Add Review</Button>
                <Table columns={columns} dataSource={reviewList} />
             </div>
-         ) : (<Skeleton active />)
-         }
+         ) : (
+            <Skeleton active />
+         )}
       </>
    );
-
 }
 
 export default Review;

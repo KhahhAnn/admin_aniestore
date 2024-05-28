@@ -1,11 +1,14 @@
-import { Column } from '@ant-design/plots';
-import { Button, Popconfirm, Table, Skeleton } from 'antd';
+import { Skeleton, Table } from 'antd';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { FaArrowTrendDown, FaArrowTrendUp } from "react-icons/fa6";
+import ReactECharts from 'echarts-for-react';
+
 const Dashboard = () => {
    const [orderList, setOrderList] = useState([]);
    const [loading, setLoading] = useState(false);
+   const [chartData, setChartData] = useState([]);
+
    const columns = [
       {
          title: 'STT',
@@ -13,9 +16,9 @@ const Dashboard = () => {
          key: 'stt',
       },
       {
-         title: 'Tên hóa đơn bán',
-         dataIndex: 'orderName',
-         key: 'orderName',
+         title: 'Id đơn hàng',
+         dataIndex: 'orderId',
+         key: 'orderId',
       },
       {
          title: 'Ngày bán',
@@ -24,53 +27,21 @@ const Dashboard = () => {
       },
       {
          title: 'Trạng thái đơn hàng',
-         key: "status",
-         dataIndex: 'status',
-         render: (status) => (status ? "Đã hoàn thành" : "Chưa hoàn thành")
+         key: "orderStatus",
+         dataIndex: 'orderStatus',
       },
       {
          title: 'Tổng tiền hóa đơn',
-         dataIndex: 'total',
-         key: 'total',
-      },
-      {
-         title: 'Action',
-         dataIndex: 'id',
-         key: 'x',
-         render: (id) =>
-            <div>
-               <Popconfirm
-                  title="Delete the task"
-                  description="Are you sure to delete this task?"
-                  okText="Yes"
-                  cancelText="No"
-                  onConfirm={() => confirm(id)}
-               >
-                  <Button danger className='button-delete'>Delete</Button>
-               </Popconfirm>
-               <Button type="primary" className='button-edit'>Edit</Button>
-            </div>
+         dataIndex: 'totalDiscountedPrice',
+         key: 'totalDiscountedPrice',
+         render: (totalDiscountedPrice) => (
+            <span style={{ color: "red" }}>
+               {totalDiscountedPrice}.000 VNĐ
+            </span>
+         )
       },
    ];
-   const confirm = (id) => {
-      handleDelete(id)
-   };
-   const handleDelete = async (id) => {
-      try {
-         setLoading(false);
-         const token = localStorage.getItem("token");
-         const response = await axios.delete(`http://localhost:8080/api/discount/${id}`, {
-            headers: {
-               "Authorization": `Bearer ${token}`
-            }
-         });
-         console.log(response);
-         setLoading(true)
-         fetchData();
-      } catch (error) {
-         console.log(error);
-      }
-   }
+
    const fetchData = async () => {
       try {
          const token = localStorage.getItem("token");
@@ -84,64 +55,46 @@ const Dashboard = () => {
             stt: index + 1,
          }));
          setOrderList(orderWithStt);
-         setLoading(true)
+         setLoading(true);
+         formatOrderData(orderWithStt);
       } catch (error) {
          setLoading(true)
          console.error('Error fetching color:', error);
       }
    };
+
+   const formatOrderData = (orders) => {
+      const chartData = orders.map(order => ({
+         date: order.orderDate,
+         value: order.totalDiscountedPrice 
+      }));
+      setChartData(chartData);
+   };
+
    useEffect(() => {
       fetchData();
    }, []);
-   console.log(Array.isArray(orderList));
-   console.log(orderList);
-   const groupOrdersByMonth = (orderList) => {
-      const groupedOrders = {};
-      orderList.forEach(order => {
-         const orderDate = new Date(order.orderDate);
-         const monthYear = orderDate.getMonth() + 1 + '/' + orderDate.getFullYear();
-         if (!groupedOrders[monthYear]) {
-            groupedOrders[monthYear] = {
-               orderDate: monthYear,
-               total: order.total
-            };
-         } else {
-            groupedOrders[monthYear].total += order.total;
-         }
-      });
 
-      return Object.values(groupedOrders);
-   };
-
-   const data = groupOrdersByMonth(orderList);
-
-   const config = {
-      data,
-      xField: 'orderDate',
-      yField: 'total',
-      color: "#ffd333",
-      label: {
-         position: 'top',
-         style: {
-            fill: '#FFFFFF',
-            opacity: 0.6,
-         },
-      },
+   const option = {
       xAxis: {
-         label: {
-            autoHide: true,
-            autoRotate: false,
-         },
+         type: 'category',
+         data: chartData.map(data => data.date)
       },
-      meta: {
-         type: {
-            alias: 'Month',
-         },
-         sales: {
-            alias: 'Income',
-         },
+      yAxis: {
+         type: 'value'
       },
+      tooltip: {
+         show: true,
+         trigger: 'axis'
+      },
+      series: [
+         {
+            data: chartData.map(data => data.value),
+            type: 'line'
+         }
+      ]
    };
+
    return (
       <div>
          <h3 className='mb-4'>Dashboard</h3>
@@ -174,14 +127,7 @@ const Dashboard = () => {
                </div>
             </div>
          </div>
-         <div className='mt-4'>
-            <h3 className='mb-4'>Tiền lãi 2024($)</h3>
-            <div>
-            {
-                  loading ? (<Column {...config} />) : (<Skeleton active />)
-               }
-            </div>
-         </div>
+         <ReactECharts option={option} style={{ height: '300px' }} />
          <div className='mt-4'>
             <h3 className='mb-4'>Danh sách order</h3>
             <div>
@@ -193,4 +139,4 @@ const Dashboard = () => {
       </div>
    )
 }
-export default Dashboard
+export default Dashboard;

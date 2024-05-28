@@ -14,13 +14,13 @@ const Products = () => {
       },
       {
          title: 'Tên sản phẩm',
-         dataIndex: 'productName',
-         key: 'productName',
+         dataIndex: 'title',
+         key: 'title',
       },
       {
          title: 'Loại sản phẩm',
-         dataIndex: 'typeProduct',
-         key: 'typeProduct',
+         dataIndex: 'brand',
+         key: 'brand',
       },
       {
          title: 'Màu sắc',
@@ -28,39 +28,59 @@ const Products = () => {
          key: 'color',
       },
       {
-         title: 'Size',
-         dataIndex: 'size',
-         key: 'size',
-      },
-      {
-         title: 'Giá nhập',
-         dataIndex: 'purchasePrice',
-         key: 'purchasePrice',
-         render: (text, record) => formatCurrency(record.purchasePrice),
+         title: 'Số lượng còn',
+         dataIndex: 'sizes',
+         key: 'sizes',
+         render: (sizes) => {
+            if (Array.isArray(sizes)) {
+               return (
+                  <span>
+                     {sizes.map((size) => (
+                        <span key={size.name}> {size.quantity} </span>
+                     ))}
+                  </span>
+               );
+            } else {
+               return null; 
+            }
+         },
       },
       {
          title: 'Giá gốc ',
-         dataIndex: 'originPrices',
-         key: 'originPrices',
-         render: (text, record) => formatCurrency(record.originPrices),
+         dataIndex: 'price',
+         key: 'price',
+         render: (text, record) => formatCurrency(record.price),
       },
       {
          title: 'Giá bán',
-         dataIndex: 'salePrices',
-         key: 'salePrices',
-         render: (text, record) => formatCurrency(record.salePrices),
+         dataIndex: 'discountedPrice',
+         key: 'discountedPrice',
+         render: (text, record) => formatCurrency(record.discountedPrice),
       },
       {
-         title: 'Số lượng còn',
-         dataIndex: 'quantity',
-         key: 'quantity',
+         title: 'Size',
+         dataIndex: 'sizes',
+         key: 'sizes',
+         render: (sizes) => {
+            if (Array.isArray(sizes)) {
+               return (
+                  <span>
+                     {sizes.map((size) => (
+                        <span key={size.name}> {size.name} </span>
+                     ))}
+                  </span>
+               );
+            } else {
+               return null;
+            }
+         },
       },
       {
          title: 'Action',
          dataIndex: 'id',
          key: 'x',
-         render: (id) =>
-            <div>
+         render: (id) => (
+            <div style={{ display: "flex", flexDirection: "row" }}>
                <Popconfirm
                   title="Delete the task"
                   description="Are you sure to delete this task?"
@@ -72,6 +92,7 @@ const Products = () => {
                </Popconfirm>
                <Button type="primary" className='button-edit'>Edit</Button>
             </div>
+         ),
       },
    ];
 
@@ -110,16 +131,23 @@ const Products = () => {
                "Authorization": `Bearer ${token}`
             }
          });
-         const productWithStt = response.data._embedded.productses.reverse().map((product, index) => ({
+         console.log(response.data);
+         const productWithStt = response.data._embedded.products.reverse().map((product, index) => ({
             ...product,
             stt: index + 1,
+            sizes: product.sizes.map(size => ({
+               name: size.name,
+               quantity: size.quantity
+            }))
          }));
          setProductList(productWithStt);
          setLoading(true)
+         console.log(productWithStt);
       } catch (error) {
          console.error('Error fetching color:', error);
       }
    };
+   
    useEffect(() => {
       fetchData();
    }, []);

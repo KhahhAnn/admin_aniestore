@@ -1,5 +1,5 @@
-import { Button, Layout, Menu, theme } from 'antd';
-import { jwtDecode } from 'jwt-decode';
+import { Button, Layout, Menu, Skeleton, theme } from 'antd';
+import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { AiOutlineDashboard, AiOutlinePicLeft, AiOutlinePicRight } from "react-icons/ai";
 import { BiCategoryAlt, BiSolidDiscount } from "react-icons/bi";
@@ -7,37 +7,48 @@ import { CiUser } from "react-icons/ci";
 import { FaClipboardList, FaFileInvoiceDollar } from "react-icons/fa";
 import { FaStar } from "react-icons/fa6";
 import { GrCatalogOption, GrUserAdmin } from "react-icons/gr";
-import { IoChatboxEllipses, IoNotifications } from "react-icons/io5";
+import { IoNotifications } from "react-icons/io5";
 import { MdEventNote, MdProductionQuantityLimits } from "react-icons/md";
 import { Outlet, useNavigate } from 'react-router-dom';
 
-
 const { Header, Sider, Content } = Layout;
 const MainLayout = () => {
-   const [img, setImg] = useState('');
-   const [username, setUserName] = useState('');
-   const [email, setEmail] = useState('');
+   const [loading, setLoading] = useState(true);
+   const [user, setUser] = useState();
+   const [userFetched, setUserFetched] = useState(false); 
+
+   const getUser = async (jwt) => {
+      try {
+         const response = await axios.get('http://localhost:8080/api/users/profile', {
+            headers: {
+               "Authorization": `Bearer ${jwt}`
+            }
+         })
+         setUser(response.data);
+         setUserFetched(true); 
+         setLoading(false);
+      } catch (error) {
+         setLoading(false);
+      }
+   }
+
    useEffect(() => {
       const jjwt_token = localStorage.getItem('token');
-      const img = localStorage.getItem('img')
-      if (jjwt_token !== null) {
-         const userData = jwtDecode(jjwt_token);
-         if (userData) {
-            setImg(img+"");
-            setUserName(userData.userName + "");
-            setEmail(userData.sub + "");
-         }
+      if (jjwt_token && !userFetched) { 
+         getUser(jjwt_token);
       }
-   }, [])
+   }, [userFetched]) 
+
    const [collapsed, setCollapsed] = useState(false);
    const {
       token: { colorBgContainer, borderRadiusLG },
    } = theme.useToken();
    const navigate = useNavigate();
+   
    return (
-      <Layout>
+      loading ? (<Skeleton active />) : (<Layout>
          <Sider trigger={null} collapsible collapsed={collapsed}>
-            <div className="logo" >
+            <div className="logo">
                <h2 className='text-white fs-5 text-center py-3 mb-0'>
                   <span className='sm-logo'>< GrUserAdmin /></span>
                   <span className='lg-logo'>ADMIN ANIESTORE</span>
@@ -102,11 +113,6 @@ const MainLayout = () => {
                      label: 'Products',
                   },
                   {
-                     key: 'message',
-                     icon: <IoChatboxEllipses className='fs-4' />,
-                     label: 'Message',
-                  },
-                  {
                      key: 'review',
                      icon: <FaStar className='fs-4' />,
                      label: 'Review',
@@ -139,11 +145,11 @@ const MainLayout = () => {
                   </div>
                   <div className='d-flex gap-3 align-items-center'>
                      <div>
-                        <img className='avata' src={img} alt='' />
+                        <img className='avata' src={user?.imageSrc} alt='' />
                      </div>
                      <div>
-                        <h5 className='mb-0'>{username}</h5>
-                        <p className='mb-0'>{email}</p>
+                        <h5 className='mb-0'>{user?.firstName} {user?.lastName}</h5>
+                        <p className='mb-0'>{user?.email}</p>
                      </div>
                   </div>
                </div>
@@ -160,7 +166,7 @@ const MainLayout = () => {
                <Outlet />
             </Content>
          </Layout>
-      </Layout>
+      </Layout>)
    )
 }
 export default MainLayout;

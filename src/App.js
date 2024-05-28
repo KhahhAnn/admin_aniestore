@@ -9,16 +9,15 @@ import Event from './pages/Event';
 import ForgotPassword from './pages/ForgotPassword';
 import ImportInvoice from './pages/ImportInvoice';
 import Login from './pages/Login';
-import Message from './pages/Message';
 import Order from './pages/Order';
 import Products from './pages/Products';
 import ResetPassword from './pages/ResetPassword';
 import Review from './pages/Review';
-import AddCategory from './pages/addPages/addCategory';
 import AddDiscount from './pages/addPages/AddDiscount';
-import AddEvent from './pages/addPages/addEvent';
-import AddProduct from './pages/addPages/AddProduct';
 import AddImportInvoice from './pages/addPages/AddImportInvoice';
+import AddProduct from './pages/addPages/AddProduct';
+import AddCategory from './pages/addPages/addCategory';
+import AddEvent from './pages/addPages/addEvent';
 
 function App() {
   return (
@@ -31,7 +30,6 @@ function App() {
           <Route index element={<Dashboard />} />
           <Route path='review' element={<Review />} />
           <Route path='category' element={<Category />} />
-          <Route path='message' element={<Message />} />
           <Route path='customers' element={<Customers />} />
           <Route path='event' element={<Event />} />
           <Route path='import-invoice' element={<ImportInvoice />} />

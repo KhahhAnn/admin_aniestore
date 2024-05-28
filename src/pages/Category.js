@@ -13,8 +13,8 @@ const Category = () => {
       },
       {
          title: 'Tên loại sản phẩm',
-         dataIndex: 'categoryName',
-         key: 'categoryName',
+         dataIndex: 'name',
+         key: 'name',
       },
       {
          title: 'Action',
@@ -57,6 +57,7 @@ const Category = () => {
             stt: index + 1,
          }));
          setCategoryList(categoryWithStt);
+         console.log(categoryWithStt);
          setLoading(true)
       } catch (error) {
          console.error('Error fetching color:', error);
@@ -71,12 +72,12 @@ const Category = () => {
             loading ? 
             (
                <div>
-                  <Link to="../add-category"> <button type="button" class="btn btn-success mb-3">Add Category</button> </Link>
+                  <Link to="../add-category"> <button type="button" className="btn btn-success mb-3">Add Category</button> </Link>
                   <Table columns={columns} dataSource={categoryList} />
                </div>
             ) : (<Skeleton active />)
          }
       </div>
-   );
+   ); 
 };
 export default Category;

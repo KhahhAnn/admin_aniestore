@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { Button, Table } from 'antd';
+import { Button, Skeleton, Table } from 'antd';
 import axios from 'axios';
-import { Skeleton } from 'antd';
+import React, { useEffect, useState } from 'react';
+
 
 const Customers = () => {
    const [userList, setUserList] = useState([]);
@@ -23,24 +23,9 @@ const Customers = () => {
          key: 'lastName',
       },
       {
-         title: 'Địa chỉ',
-         dataIndex: 'address',
-         key: 'address',
-      },
-      {
-         title: 'Ngày sinh',
-         dataIndex: 'birthday',
-         key: 'birthday',
-      },
-      {
          title: 'Số điện thoại',
-         dataIndex: 'phoneNum',
-         key: 'phoneNum',
-      },
-      {
-         title: 'Giới tính',
-         dataIndex: 'gender',
-         key: 'gender',
+         dataIndex: 'mobile',
+         key: 'mobile',
       },
       {
          title: 'Email',
@@ -77,6 +62,7 @@ const Customers = () => {
             stt: index + 1,
          }));
          setUserList(usersWithStt);
+         console.log(usersWithStt);
          setLoading(true)
       } catch (error) {
          console.error('Error fetching reviews:', error);
@@ -100,7 +86,7 @@ const Customers = () => {
                                  margin: 0,
                               }}
                            >
-                              {"Họ và tên: " + record.firstName + " " + record.lastName + " - Địa chỉ: " + record.address + " - Số điện thoại: " + record.phoneNum}
+                              {"Họ và tên: " + record.firstName + " " + record.lastName +  " - Số điện thoại: " + record.mobile}
                            </p>
                         ),
                         rowExpandable: (record) => record.name !== 'Not Expandable',
