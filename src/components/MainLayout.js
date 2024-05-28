@@ -10,12 +10,18 @@ import { GrCatalogOption, GrUserAdmin } from "react-icons/gr";
 import { IoNotifications } from "react-icons/io5";
 import { MdEventNote, MdProductionQuantityLimits } from "react-icons/md";
 import { Outlet, useNavigate } from 'react-router-dom';
+import { ImExit } from "react-icons/im";
+
 
 const { Header, Sider, Content } = Layout;
 const MainLayout = () => {
    const [loading, setLoading] = useState(true);
    const [user, setUser] = useState();
    const [userFetched, setUserFetched] = useState(false); 
+   const handleLogout = () => {
+      localStorage.removeItem('token');
+   }
+   
 
    const getUser = async (jwt) => {
       try {
@@ -116,6 +122,12 @@ const MainLayout = () => {
                      key: 'review',
                      icon: <FaStar className='fs-4' />,
                      label: 'Review',
+                  },
+                  {
+                     key: '/',
+                     icon: <ImExit  className='fs-4' />,
+                     label: 'Log out',
+                     onClick: handleLogout,
                   },
                ]}
             />
