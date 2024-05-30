@@ -1,6 +1,7 @@
-import { Button, Skeleton, Table, Modal, Form, Input } from 'antd';
+import { Button, Form, Input, Modal, Skeleton, Switch, Table, message } from 'antd';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 const Customers = () => {
    const [userList, setUserList] = useState([]);
@@ -10,9 +11,16 @@ const Customers = () => {
    const [form] = Form.useForm();
    const [file, setFile] = useState();
    function handleChange(e) {
-      console.log(e.target.files);
-      setFile(URL.createObjectURL(e.target.files[0]));
+      const imageFile = e.target.files[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+         const imageUrl = reader.result;
+         setFile(imageUrl);
+         form.setFieldsValue({ imageSrc: imageUrl });
+      };
+      reader.readAsDataURL(imageFile);
    }
+   
 
    const columns = [
       {
@@ -41,6 +49,12 @@ const Customers = () => {
          key: 'email',
       },
       {
+         title: 'Password',
+         dataIndex: 'password',
+         key: 'password',
+         render: () => '*********',
+      },
+      {
          title: 'Kích hoạt',
          dataIndex: 'active',
          key: 'active',
@@ -50,7 +64,7 @@ const Customers = () => {
          title: 'Ảnh',
          dataIndex: 'imageSrc',
          key: 'imageSrc',
-         render: (imageSrc) => <img src={imageSrc} alt="User" style={{ width: '50px', height: '50px' }} />,
+         render: (imageSrc) => <img src={imageSrc} alt="User" style={{ width: '50px', height: '50px', objectFit: "cover" }} />,
       },
       {
          title: 'Action',
@@ -76,7 +90,6 @@ const Customers = () => {
             stt: index + 1,
          }));
          setUserList(usersWithStt);
-         console.log(usersWithStt);
          setLoading(true);
       } catch (error) {
          console.error('Error fetching users:', error);
@@ -96,21 +109,26 @@ const Customers = () => {
 
    const handleCancel = () => {
       setIsModalVisible(false);
+      setFile(null);
    };
 
    const handleOk = async () => {
       try {
          const updatedUser = form.getFieldsValue();
+         console.log(updatedUser);
          const token = localStorage.getItem("token");
-         await axios.put(`http://localhost:8080/user/${editingUser.id}`, updatedUser, {
+         await axios.put(`http://localhost:8080/api/admin/customer`, updatedUser, {
             headers: {
-               "Authorization": `Bearer ${token}`
+               "Authorization": `Bearer ${token}`,
+               "Content-Type": "application/json"
             }
          });
-         setUserList(prevList => prevList.map(user => user.id === editingUser.id ? { ...user, ...updatedUser } : user));
+         fetchData();
          setIsModalVisible(false);
+         message.success("Cập nhật thành công");
       } catch (error) {
          console.error('Error updating user:', error);
+         message.error("Cập nhật thất bại");
       }
    };
 
@@ -119,7 +137,7 @@ const Customers = () => {
          {
             loading ? (
                <div>
-                  <Button type="button" className="btn btn-success mb-3">Add Customer</Button>
+                  <Link to="../add-custommer"><button type="button" class="btn btn-success mb-3">Thêm tài khoản</button></Link>
                   <Table
                      columns={columns}
                      expandable={{
@@ -149,14 +167,17 @@ const Customers = () => {
                            <Input />
                         </Form.Item>
                         <Form.Item name="email" label="Email">
-                           <Input />
+                           <Input disabled/>
+                        </Form.Item>
+                        <Form.Item name="password" label="Password">
+                           <Input.Password />
                         </Form.Item>
                         <Form.Item name="imageSrc" label="Ảnh">
                            <input type="file" onChange={handleChange} />
-                           <img src={file == null ? form.getFieldValue('imageSrc') : file} alt='' style={{width: "100px", height: "100px", marginTop: "10px", objectFit: 'cover'}} />
+                           <img src={file == null ? form.getFieldValue('imageSrc') : file} alt='' style={{ width: "100px", height: "100px", marginTop: "10px", objectFit: 'cover' }} />
                         </Form.Item>
-                        <Form.Item name="active" label="Kích hoạt">
-                           <Input type="checkbox" checked={form.getFieldValue('active')} />
+                        <Form.Item name="active" label="Kích hoạt" valuePropName="checked">
+                           <Switch checked={form.getFieldValue('active')} />
                         </Form.Item>
                      </Form>
                   </Modal>

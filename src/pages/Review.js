@@ -1,4 +1,4 @@
-import { Button, Popconfirm, Table, Skeleton } from 'antd';
+import { Button, Popconfirm, Table, Skeleton, message } from 'antd';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import ReactECharts from 'echarts-for-react';
@@ -83,7 +83,6 @@ const Review = () => {
          setGoodReviews(goodCount);
          setAverageReviews(averageCount);
          setPoorReviews(poorCount);
-   
       } catch (error) {
          setLoading(true);
          console.log('Error fetching reviews:', error);
@@ -126,9 +125,9 @@ const Review = () => {
                show: false
             },
             data: [
-               { value: goodReviews, name: 'Good (4-5 stars)' },
-               { value: averageReviews, name: 'Average (2-3 stars)' },
-               { value: poorReviews, name: 'Poor (0-1 stars)' }
+               { value: goodReviews, name: 'Tốt (4-5 sao)' },
+               { value: averageReviews, name: 'Trung bình (2-3 sao)' },
+               { value: poorReviews, name: 'Kém (0-1 sao)' }
             ]
          }
       ]
@@ -179,15 +178,17 @@ const Review = () => {
       console.log(id);
       try {
          const token = localStorage.getItem("token");
-         const response = await axios.delete(`http://localhost:8080/api/review/${id}`, {
+         const response = await axios.delete(`http://localhost:8080/api/admin/review/${id}`, {
             headers: {
                "Authorization": `Bearer ${token}`
             }
          });
          console.log(response);
          fetchData();
+         message.success("Xóa loại sản phẩm thành công");
       } catch (error) {
          console.log(error);
+         message.error("Xóa loại sản phẩm thành công");
       }
    }
 

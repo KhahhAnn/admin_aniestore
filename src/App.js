@@ -19,6 +19,7 @@ import AddProduct from './pages/addPages/AddProduct';
 import AddCategory from './pages/addPages/addCategory';
 import AddEvent from './pages/addPages/addEvent';
 import PrivateRoute from './components/PrivateRoute';
+import AddCustomer from './pages/addPages/AddCustomer';
 
 function App() {
   return (
@@ -49,6 +50,7 @@ function App() {
           <Route path='add-event' element={<AddEvent />} />
           <Route path='add-product' element={<AddProduct />} />
           <Route path='add-invoice' element={<AddImportInvoice />} />
+          <Route path='add-custommer' element={<AddCustomer />} />
         </Route>
       </Routes>
     </Router>

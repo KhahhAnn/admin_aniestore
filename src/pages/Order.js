@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { Button, Popconfirm, Skeleton, Table, Modal, Form, Input, Select } from 'antd';
+import { Button, Form, Input, Modal, Popconfirm, Select, Skeleton, Table, message } from 'antd';
 import axios from 'axios';
 import ReactECharts from 'echarts-for-react';
+import React, { useEffect, useState } from 'react';
 
 const { Option } = Select;
 
@@ -41,26 +41,26 @@ const Order = () => {
          key: 'totalDiscountedPrice',
          render: (totalDiscountedPrice) => (
             <span style={{ color: "red" }}>
-               {totalDiscountedPrice}.000 VNĐ
+               {formatCurrency(totalDiscountedPrice)}
             </span>
          )
       },
       {
          title: 'Action',
-         dataIndex: 'orderId',
-         key: 'orderId',
-         render: (orderId) => (
+         dataIndex: 'id',
+         key: 'id',
+         render: (id) => (
             <div>
                <Popconfirm
                   title="Delete the task"
                   description="Are you sure to delete this task?"
                   okText="Yes"
                   cancelText="No"
-                  onConfirm={() => confirm(orderId)}
+                  onConfirm={() => confirm(id)}
                >
                   <Button danger className='button-delete'>Delete</Button>
                </Popconfirm>
-               <Button type="primary" className='button-edit' onClick={() => showEditModal(orderId)}>Edit</Button>
+               <Button type="primary" className='button-edit' onClick={() => showEditModal(id)}>Edit</Button>
             </div>
          ),
       },
@@ -69,12 +69,14 @@ const Order = () => {
    const confirm = (orderId) => {
       handleDelete(orderId)
    };
+   
 
    const handleDelete = async (orderId) => {
       try {
+         console.log(orderId);
          setLoading(false);
          const token = localStorage.getItem("token");
-         const response = await axios.delete(`http://localhost:8080/api/order/${orderId}`, {
+         const response = await axios.delete(`http://localhost:8080/api/admin/orders/${orderId}/delete`, {
             headers: {
                "Authorization": `Bearer ${token}`
             }
@@ -82,8 +84,11 @@ const Order = () => {
          console.log(response.data);
          setLoading(true);
          fetchData();
+         message.success("Xóa thành công");
       } catch (error) {
          console.log(error);
+         message.error("Xóa thất bại");
+         setLoading(true);
       }
    }
 
@@ -102,6 +107,7 @@ const Order = () => {
             stt: index + 1,
          }));
          setOrderList(orderWithStt);
+         console.log(orderWithStt);
          setLoading(true);
          const statusCounts = orders.reduce((acc, order) => {
             acc[order.orderStatus] = (acc[order.orderStatus] || 0) + 1;
@@ -127,11 +133,16 @@ const Order = () => {
    }, []);
 
    const showEditModal = (orderId) => {
-      const order = orderList.find(order => order.orderId === orderId);
-      setEditingOrder(order);
-      form.setFieldsValue(order);
-      setIsModalVisible(true);
+      const order = orderList.find(order => order.id === orderId);
+      if (order) {
+         setEditingOrder(order);
+         form.setFieldsValue(order);
+         setIsModalVisible(true);
+      } else {
+         message.error("Không tìm thấy đơn hàng");
+      }
    };
+   
 
    const handleCancel = () => {
       setIsModalVisible(false);
@@ -141,15 +152,17 @@ const Order = () => {
       try {
          const updatedOrder = form.getFieldsValue();
          const token = localStorage.getItem("token");
-         await axios.put(`http://localhost:8080/order/${editingOrder.orderId}`, updatedOrder, {
+         await axios.put('http://localhost:8080/api/admin/orders', updatedOrder, {
             headers: {
                "Authorization": `Bearer ${token}`
             }
          });
-         setOrderList(prevList => prevList.map(order => order.orderId === editingOrder.orderId ? { ...order, ...updatedOrder } : order));
+         fetchData();
          setIsModalVisible(false);
+         message.success("Cập nhật thành công");
       } catch (error) {
          console.error('Error updating order:', error);
+         message.error("Cập nhật thất bại");
       }
    };
 
@@ -184,6 +197,10 @@ const Order = () => {
       ]
    };
 
+   const formatCurrency = (value) => {
+      return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+   };
+
    return (
       <div>
          {
@@ -194,16 +211,19 @@ const Order = () => {
                      <Table columns={columns} dataSource={orderList} />
                      <Modal
                         title="Edit Order"
-                        visible={isModalVisible}
+                        open={isModalVisible}
                         onOk={handleOk}
                         onCancel={handleCancel}
                      >
                         <Form form={form} layout="vertical">
+                        <Form.Item name="id" label="Id">
+                              <Input disabled />
+                           </Form.Item>
                            <Form.Item name="orderId" label="Id đơn hàng">
                               <Input disabled />
                            </Form.Item>
                            <Form.Item name="orderDate" label="Ngày bán">
-                              <Input />
+                              <Input disabled />
                            </Form.Item>
                            <Form.Item name="orderStatus" label="Trạng thái đơn hàng">
                               <Select>
@@ -215,7 +235,7 @@ const Order = () => {
                               </Select>
                            </Form.Item>
                            <Form.Item name="totalDiscountedPrice" label="Tổng tiền hóa đơn">
-                              <Input />
+                              <Input disabled />
                            </Form.Item>
                         </Form>
                      </Modal>

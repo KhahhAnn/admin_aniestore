@@ -1,53 +1,51 @@
-import { Button, Form, Input } from 'antd';
+import { Button, Form, Input, message } from 'antd';
+import axios from 'axios';
 import React from 'react';
-const formItemLayout = {
-   labelCol: {
-      xs: {
-         span: 24,
-      },
-      sm: {
-         span: 6,
-      },
-   },
-   wrapperCol: {
-      xs: {
-         span: 24,
-      },
-      sm: {
-         span: 14,
-      },
-   },
-};
-const AddCategory = () => (
-   <Form
-      {...formItemLayout}
-      variant="filled"
-      style={{
-         maxWidth: 600,
-      }}
-   >
-      <Form.Item
-         label="Category name"
-         name="Category name"
-         rules={[
-            {
-               required: true,
-               message: 'Please input!',
-            },
-         ]}
-      >
-         <Input />
-      </Form.Item>
-      <Form.Item
-         wrapperCol={{
-            offset: 6,
-            span: 16,
+import { useNavigate } from 'react-router-dom';
+
+const AddCategoryForm = () => {
+   const [form] = Form.useForm();
+   const navigate = useNavigate();
+
+   const onFinish = async (values) => {
+      try {
+         const response = await axios.post('http://localhost:8080/api/admin/category', values);
+         console.log(response.data);
+         if (response.data.status) {
+            message.success('Thêm danh mục thành công');
+            form.resetFields();
+            navigate("../category")
+         } else {
+            message.error('Thêm danh mục thất bại');
+         }
+      } catch (error) {
+         console.error('Error while adding category:', error);
+         message.error('Có lỗi xảy ra khi thêm danh mục');
+      }
+   };
+
+   return (
+      <Form
+         form={form}
+         onFinish={onFinish}
+         style={{
+            maxWidth: 600,
          }}
       >
-         <Button type="primary" htmlType="submit">
-            Submit
-         </Button>
-      </Form.Item>
-   </Form>
-);
-export default AddCategory;
+         <Form.Item
+            label="Tên danh mục"
+            name="name"
+            rules={[{ required: true, message: 'Vui lòng nhập tên danh mục' }]}
+         >
+            <Input />
+         </Form.Item>
+         <Form.Item>
+            <Button type="primary" htmlType="submit">
+               Thêm danh mục
+            </Button>
+         </Form.Item>
+      </Form>
+   );
+};
+
+export default AddCategoryForm;

@@ -1,8 +1,8 @@
 import { Skeleton, Table } from 'antd';
 import axios from 'axios';
+import ReactECharts from 'echarts-for-react';
 import React, { useEffect, useState } from 'react';
 import { FaArrowTrendDown, FaArrowTrendUp } from "react-icons/fa6";
-import ReactECharts from 'echarts-for-react';
 
 const Dashboard = () => {
    const [orderList, setOrderList] = useState([]);
@@ -36,7 +36,7 @@ const Dashboard = () => {
          key: 'totalDiscountedPrice',
          render: (totalDiscountedPrice) => (
             <span style={{ color: "red" }}>
-               {totalDiscountedPrice}.000 VNĐ
+               {formatCurrency(totalDiscountedPrice)}
             </span>
          )
       },
@@ -56,14 +56,14 @@ const Dashboard = () => {
          }));
          setOrderList(orderWithStt);
          setLoading(true);
-         formatOrderData(orderWithStt);
+         formatChartData(orderWithStt);
       } catch (error) {
-         setLoading(true)
-         console.error('Error fetching color:', error);
+         setLoading(true);
+         console.error('Error fetching orders:', error);
       }
    };
 
-   const formatOrderData = (orders) => {
+   const formatChartData = (orders) => {
       const aggregatedData = orders.reduce((acc, order) => {
          const date = order.orderDate;
          if (!acc[date]) {
@@ -73,44 +73,65 @@ const Dashboard = () => {
          return acc;
       }, {});
 
-      const chartData = Object.keys(aggregatedData).map(date => ({
-         date,
-         value: aggregatedData[date]
-      }));
+      const sortedChartData = Object.keys(aggregatedData)
+         .sort((a, b) => new Date(a) - new Date(b))
+         .map(date => ({
+            date,
+            value: aggregatedData[date]
+         }));
 
-      setChartData(chartData);
+      setChartData(sortedChartData);
    };
-
 
    useEffect(() => {
       fetchData();
    }, []);
 
+
    const option = {
       xAxis: {
          type: 'category',
-         data: chartData.map(data => data.date)
+         data: chartData.map(data => data.date),
       },
       yAxis: {
-         type: 'value'
+         type: 'value',
       },
+      title: {
+         show: true,
+         text: "Biểu đồ doanh thu tháng 5/2024",
+         textStyle: {
+            fontFamily: "monospace",
+         }
+      }, 
       tooltip: {
          show: true,
-         trigger: 'axis'
+         trigger: 'axis',
+         formatter: (params) => {
+            const [{ value, name }] = params;
+            return `${name}: ${formatCurrency(value)}`;
+         },
       },
       series: [
          {
             data: chartData.map(data => data.value),
-            type: 'line'
-         }
-      ]
+            type: 'line',
+         },
+      ],
    };
+
+   const formatCurrency = (value) => {
+      return new Intl.NumberFormat('vi-VN', {
+         style: 'currency',
+         currency: 'VND',
+      }).format(value);
+   };
+   
 
    return (
       <div>
          <h3 className='mb-4'>Dashboard</h3>
          <div className='d-flex justify-content-between align-items-center gap-3'>
-            <div className='d-flex justify-content-between align-items-end flex-grow-1 bg-white p-3 roudned-3'>
+            <div className='d-flex justify-content-between align-items-end flex-grow-1 bg-white p-3 rounded-3'>
                <div>
                   <p>Total</p> <h4 className='mb-0'>$1100</h4>
                </div>
@@ -119,7 +140,7 @@ const Dashboard = () => {
                   <p className='mb-0'>Compare To 2023</p>
                </div>
             </div>
-            <div className='d-flex justify-content-between align-items-end flex-grow-1 bg-white p-3 roudned-3'>
+            <div className='d-flex justify-content-between align-items-end flex-grow-1 bg-white p-3 rounded-3'>
                <div>
                   <p>Total</p> <h4 className='mb-0'>$1100</h4>
                </div>
@@ -128,7 +149,7 @@ const Dashboard = () => {
                   <p className='mb-0'>Compare To 2023</p>
                </div>
             </div>
-            <div className='d-flex justify-content-between align-items-end flex-grow-1 bg-white p-3 roudned-3'>
+            <div className='d-flex justify-content-between align-items-end flex-grow-1 bg-white p-3 rounded-3'>
                <div>
                   <p>Total</p> <h4 className='mb-0'>$1100</h4>
                </div>
@@ -138,7 +159,7 @@ const Dashboard = () => {
                </div>
             </div>
          </div>
-         <ReactECharts option={option} style={{ height: '300px' }} />
+         <ReactECharts option={option} style={{ height: '300px', marginTop: "100px" }} />
          <div className='mt-4'>
             <h3 className='mb-4'>Danh sách order</h3>
             <div>
@@ -148,6 +169,7 @@ const Dashboard = () => {
             </div>
          </div>
       </div>
-   )
-}
+   );
+};
+
 export default Dashboard;

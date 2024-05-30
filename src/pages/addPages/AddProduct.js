@@ -4,9 +4,13 @@ import {
    Form,
    Input,
    InputNumber,
-   Upload
+   Upload,
+   Select,
+   message
 } from 'antd';
-import React from 'react';
+import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 const formItemLayout = {
    labelCol: {
@@ -26,149 +30,188 @@ const formItemLayout = {
       },
    },
 };
-const normFile = (e) => {
-   if (Array.isArray(e)) {
-      return e;
+
+
+const AddProduct = () => {
+   const [loading, setLoading] = useState(false);
+   const [categoryList, setCategoryList] = useState([]);
+   const [form] = Form.useForm();
+   const [file, setFile] = useState(null);
+
+   const handleChange = (e) => {
+      const imageFile = e.target.files[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+         const imageUrl = reader.result;
+         setFile(imageUrl);
+         form.setFieldsValue({ imageUrl: imageUrl });
+      };
+      reader.readAsDataURL(imageFile);
+   };
+
+   const fetchCategory = async () => {
+      try {
+         const token = localStorage.getItem("token");
+         const response = await axios.get('http://localhost:8080/category', {
+            headers: {
+               "Authorization": `Bearer ${token}`
+            }
+         });
+         setCategoryList(response.data._embedded.categories);
+         setLoading(true);
+      } catch (error) {
+         console.error('Error fetching categories:', error);
+      }
    }
-   return e?.fileList;
-};
-const AddProduct = () => (
-   <Form
-      {...formItemLayout}
-      variant="filled"
-      style={{
-         maxWidth: 600,
-      }}
-   >
-      <Form.Item
-         label="Product name"
-         name="Product name"
-         rules={[
-            {
-               required: true,
-               message: 'Please input!',
-            },
-         ]}
-      >
-         <Input />
-      </Form.Item>
 
-      <Form.Item
-         label="Product color"
-         name="Product color"
-         rules={[
-            {
-               required: true,
-               message: 'Please input!',
-            },
-         ]}
-      >
-         <Input />
-      </Form.Item>
+   const handleSubmit = async (values) => {
+      try {
+         console.log(values);
+         const token = localStorage.getItem("token");
+         await axios.post('http://localhost:8080/api/admin/products/add', values, {
+            headers: {
+               "Authorization": `Bearer ${token}`,
+               "Content-Type": "application/json"
+            }
+         });
 
-      <Form.Item
-         label="Product size"
-         name="Product size"
-         rules={[
-            {
-               required: true,
-               message: 'Please input!',
-            },
-         ]}
-      >
-         <Input />
-      </Form.Item>
+         message.success("Product added successfully!");
+         form.resetFields();
+      } catch (error) {
+         console.error('Error adding product:', error);
+         message.error("Failed to add product.");
+      }
+   };
 
-      <Form.Item
-         label="Purchase price"
-         name="Purchase price"
-         rules={[
-            {
-               required: true,
-               message: 'Please input!',
-            },
-         ]}>
-         <Input />
-      </Form.Item>
+   useEffect(() => {
+      fetchCategory();
+   }, []);
 
-      <Form.Item
-         label="Origin price"
-         name="Origin price"
-         rules={[
-            {
-               required: true,
-               message: 'Please input!',
-            },
-         ]}>
-         <Input />
-      </Form.Item>
-
-      <Form.Item
-         label="Sale price"
-         name="Sale price"
-         rules={[
-            {
-               required: true,
-               message: 'Please input!',
-            },
-         ]}>
-         <Input />
-      </Form.Item>
-
-      <Form.Item
-         label="Quantity"
-         name="Quantity"
-         rules={[
-            {
-               required: true,
-               message: 'Please input!',
-            },
-         ]}>
-         <InputNumber />
-      </Form.Item>
-      <Form.Item
-         label="Type product"
-         name="Type product"
-         rules={[
-            {
-               required: true,
-               message: 'Please input!',
-            },
-         ]}
-      >
-         <Input />
-      </Form.Item>
-
-      <Form.Item label="Upload" valuePropName="fileList" getValueFromEvent={normFile}>
-         <Upload action="/upload.do" listType="picture-card">
-            <button
-               style={{
-                  border: 0,
-                  background: 'none',
-               }}
-               type="button"
-            >
-               <PlusOutlined />
-               <div
-                  style={{
-                     marginTop: 8,
-                  }}
-               >
-                  Upload
-               </div>
-            </button>
-         </Upload>
-      </Form.Item>
-      <Form.Item
-         wrapperCol={{
-            offset: 6,
-            span: 16,
+   return (<div>
+      <Link to="../products"><button type="button" class="btn btn-success mb-3">Sản phẩm</button></Link>
+      <Form
+         {...formItemLayout}
+         form={form}
+         variant="filled"
+         onFinish={handleSubmit}
+         style={{
+            maxWidth: 600,
          }}
       >
-         <Button type="primary" htmlType="submit">
-            Submit
-         </Button>
-      </Form.Item>
-   </Form>
-);
+         <Form.Item
+            label="Tên sản phẩm"
+            name="title"
+            rules={[
+               {
+                  required: true,
+                  message: 'Please input the product name!',
+               },
+            ]}
+         >
+            <Input />
+         </Form.Item>
+
+         <Form.Item
+            label="Màu sắc"
+            name="color"
+            rules={[
+               {
+                  required: true,
+                  message: 'Please input the product color!',
+               },
+            ]}
+         >
+            <Input />
+         </Form.Item>
+
+         <Form.Item
+            label="Giá bán"
+            name="discountedPrice"
+            rules={[
+               {
+                  required: true,
+                  message: 'Please input the discounted price!',
+               },
+            ]}>
+            <InputNumber />
+         </Form.Item>
+
+         <Form.Item
+            label="Giá gốc"
+            name="price"
+            rules={[
+               {
+                  required: true,
+                  message: 'Please input the original price!',
+               },
+            ]}>
+            <InputNumber />
+         </Form.Item>
+
+         <Form.Item
+            label="Thương hiệu"
+            name="brand"
+            rules={[
+               {
+                  required: true,
+                  message: 'Please input the brand!',
+               },
+            ]}>
+            <Input />
+         </Form.Item>
+
+         <Form.Item
+            label="Số lượng"
+            name="quantity"
+            rules={[
+               {
+                  required: true,
+                  message: 'Please input the quantity!',
+               },
+            ]}>
+            <InputNumber />
+         </Form.Item>
+
+         <Form.Item
+            label="Loại sản phẩm"
+            name="categoryId"
+            rules={[
+               {
+                  required: true,
+                  message: 'Please select a category!',
+               },
+            ]}
+         >
+            <Select
+               placeholder="Select a category"
+               loading={!loading}
+            >
+               {categoryList.map(category => (
+                  <Select.Option key={category.id} value={category.id}>
+                     {category.name}
+                  </Select.Option>
+               ))}
+            </Select>
+         </Form.Item>
+
+         <Form.Item name="imageUrl" label="Ảnh">
+            <input type="file" onChange={handleChange} />
+            <img src={file == null ? form.getFieldValue('imageUrl') : file} alt='' style={{ width: "100px", height: "100px", marginTop: "10px", objectFit: 'cover' }} />
+         </Form.Item>
+
+         <Form.Item
+            wrapperCol={{
+               offset: 6,
+               span: 16,
+            }}
+         >
+            <Button type="primary" htmlType="submit">
+               Submit
+            </Button>
+         </Form.Item>
+      </Form>
+   </div>
+   );
+}
+
 export default AddProduct;

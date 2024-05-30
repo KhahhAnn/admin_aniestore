@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Modal, Form, Input, Skeleton, Table } from 'antd';
+import { Button, Modal, Form, Input, Skeleton, Table, message } from 'antd';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 
@@ -37,17 +37,20 @@ const Category = () => {
    const handleDelete = async (id) => {
       try {
          setLoading(false);
+         console.log(id);
          const token = localStorage.getItem("token");
-         const response = await axios.delete(`http://localhost:8080/api/category/${id}`, {
+         await axios.delete(`http://localhost:8080/api/admin/category/${id}`, {
             headers: {
                "Authorization": `Bearer ${token}`
             }
          });
-         console.log(response);
+         message.success("Xóa loại sản phẩm thành công");
          setLoading(true);
          fetchData();
       } catch (error) {
          console.log(error);
+         message.error("Xóa loại sản phẩm thất bại");
+         setLoading(true);
       }
    };
 
@@ -63,6 +66,7 @@ const Category = () => {
             ...category,
             stt: index + 1,
          }));
+         console.log(categoryWithStt);
          setCategoryList(categoryWithStt);
          setLoading(true);
       } catch (error) {
@@ -70,16 +74,22 @@ const Category = () => {
       }
    };
 
+
    useEffect(() => {
       fetchData();
    }, []);
 
    const showEditModal = (id) => {
-      const category = categoryList.find(category => category.id === id);
+      const index = categoryList.findIndex(category => category.id === id);
+      const category = categoryList[index];
+      form.setFieldsValue({
+         id: category.id,
+         name: category.name
+      });
       setEditingCategory(category);
-      form.setFieldsValue(category);
       setIsModalVisible(true);
    };
+
 
    const handleCancel = () => {
       setIsModalVisible(false);
@@ -88,44 +98,51 @@ const Category = () => {
    const handleOk = async () => {
       try {
          const updatedCategory = form.getFieldsValue();
+         console.log(updatedCategory);
          const token = localStorage.getItem("token");
-         await axios.put(`http://localhost:8080/category/${editingCategory.id}`, updatedCategory, {
+         await axios.put(`http://localhost:8080/api/admin/category`, updatedCategory, {
             headers: {
-               "Authorization": `Bearer ${token}`
+               "Authorization": `Bearer ${token}`,
+               "Content-Type": "application/json"
             }
          });
-         setCategoryList(prevList => prevList.map(category => category.id === editingCategory.id ? { ...category, ...updatedCategory } : category));
+         fetchData();
          setIsModalVisible(false);
+         message.success("Cập nhật loại sản phẩm thành công");
       } catch (error) {
          console.error('Error updating category:', error);
+         message.error("Cập nhật loại sản phẩm thất bại");
       }
    };
 
    return (
       <div>
          {
-            loading ? 
-            (
-               <div>
-                  <Link to="../add-category"><button type="button" className="btn btn-success mb-3">Add Category</button></Link>
-                  <Table columns={columns} dataSource={categoryList} />
-                  <Modal
-                     title="Edit Category"
-                     visible={isModalVisible}
-                     onOk={handleOk}
-                     onCancel={handleCancel}
-                  >
-                     <Form form={form} layout="vertical">
-                        <Form.Item name="name" label="Tên loại sản phẩm">
-                           <Input />
-                        </Form.Item>
-                     </Form>
-                  </Modal>
-               </div>
-            ) : (<Skeleton active />)
+            loading ?
+               (
+                  <div>
+                     <Link to="../add-category"><button type="button" className="btn btn-success mb-3">Add Category</button></Link>
+                     <Table columns={columns} dataSource={categoryList} />
+                     <Modal
+                        title="Edit Category"
+                        visible={isModalVisible}
+                        onOk={handleOk}
+                        onCancel={handleCancel}
+                     >
+                        <Form form={form} layout="vertical">
+                           <Form.Item name="id" label="ID">
+                              <Input disabled />
+                           </Form.Item>
+                           <Form.Item name="name" label="Tên loại sản phẩm">
+                              <Input />
+                           </Form.Item>
+                        </Form>
+                     </Modal>
+                  </div>
+               ) : (<Skeleton active />)
          }
       </div>
-   ); 
+   );
 };
 
 export default Category;
