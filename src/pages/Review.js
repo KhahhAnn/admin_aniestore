@@ -2,6 +2,8 @@ import { Button, Popconfirm, Table, Skeleton, message } from 'antd';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import ReactECharts from 'echarts-for-react';
+import * as XLSX from 'xlsx';
+
 
 const Review = () => {
    const [reviewList, setReviewList] = useState([]);
@@ -22,53 +24,53 @@ const Review = () => {
                "Authorization": `Bearer ${token}`
             }
          });
-   
+
          console.log(response.data);
-   
+
          const reviewListWithStt = response.data._embedded.reviews.reverse().map((review, index) => ({
             ...review,
             stt: index + 1,
             id: review._links.self.href.split('/').pop(),
          }));
-   
+
          const userLinks = reviewListWithStt.map(review => review._links.user.href);
          const productLinks = reviewListWithStt.map(review => review._links.product.href);
-   
+
          const userEmailPromises = userLinks.map(link => axios.get(link, {
             headers: {
                "Authorization": `Bearer ${token}`
             }
          }));
-   
+
          const productPromises = productLinks.map(link => axios.get(link, {
             headers: {
                "Authorization": `Bearer ${token}`
             }
          }));
-   
+
          const [userEmails, products] = await Promise.all([
             Promise.all(userEmailPromises),
             Promise.all(productPromises)
          ]);
-   
+
          products.forEach((response, index) => {
             console.log('Product Response:', response.data);
          });
-   
+
          const updatedReviews = reviewListWithStt.map((review, index) => ({
             ...review,
             userEmail: userEmails[index].data.email,
             productName: products[index].data.title,
          }));
-   
+
          setReviewList(updatedReviews);
          setLoading(true);
-   
+
          // Tính toán dữ liệu cho biểu đồ
          let goodCount = 0;
          let averageCount = 0;
          let poorCount = 0;
-   
+
          updatedReviews.forEach(review => {
             const starsNumber = review.starsNumber;
             if (starsNumber >= 4 && starsNumber <= 5) {
@@ -79,7 +81,7 @@ const Review = () => {
                poorCount++;
             }
          });
-   
+
          setGoodReviews(goodCount);
          setAverageReviews(averageCount);
          setPoorReviews(poorCount);
@@ -88,7 +90,7 @@ const Review = () => {
          console.log('Error fetching reviews:', error);
       }
    };
-   
+
 
    const option = {
       tooltip: {
@@ -110,9 +112,9 @@ const Review = () => {
                borderWidth: 2
             },
             label: {
-               show: false, 
+               show: false,
                position: 'inside',
-               formatter: '{b}: {c} ({d}%)' 
+               formatter: '{b}: {c} ({d}%)'
             },
             emphasis: {
                label: {
@@ -161,18 +163,24 @@ const Review = () => {
          render: (id) => (
             <div>
                <Popconfirm
-                  title="Delete the task"
-                  description="Are you sure to delete this task?"
-                  okText="Yes"
-                  cancelText="No"
+                  title="Xóa"
+                  description="Bạn có chắc chắn muốn xóa?"
+                  okText="Có"
+                  cancelText="Quay lại"
                   onConfirm={() => confirm(id)}
                >
-                  <Button danger className='button-delete'>Delete</Button>
+                  <Button danger className='button-delete'>Xóa</Button>
                </Popconfirm>
             </div>
          ),
       },
    ];
+   const exportToExcel = () => {
+      const ws = XLSX.utils.json_to_sheet(reviewList);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Categories");
+      XLSX.writeFile(wb, "review.xlsx");
+   };
 
    const handleDelete = async (id) => {
       console.log(id);
@@ -201,6 +209,9 @@ const Review = () => {
          {loading ? (
             <div>
                <ReactECharts option={option} />
+               <Button onClick={exportToExcel} type="primary" style={{ marginBottom: '20px' }}>
+                  Xuất excel
+               </Button>
                <Table columns={columns} dataSource={reviewList} />
             </div>
          ) : (

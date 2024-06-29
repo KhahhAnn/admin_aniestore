@@ -2,6 +2,7 @@ import { Button, Form, Input, Modal, Popconfirm, Select, Skeleton, Table, messag
 import axios from 'axios';
 import ReactECharts from 'echarts-for-react';
 import React, { useEffect, useState } from 'react';
+import * as XLSX from 'xlsx';
 
 const { Option } = Select;
 
@@ -67,30 +68,25 @@ const Order = () => {
    ];
 
    const confirm = (orderId) => {
-      handleDelete(orderId)
+      handleDelete(orderId);
    };
-   
 
    const handleDelete = async (orderId) => {
       try {
-         console.log(orderId);
          setLoading(false);
          const token = localStorage.getItem("token");
-         const response = await axios.delete(`http://localhost:8080/api/admin/orders/${orderId}/delete`, {
+         await axios.delete(`http://localhost:8080/api/admin/orders/${orderId}/delete`, {
             headers: {
                "Authorization": `Bearer ${token}`
             }
          });
-         console.log(response.data);
-         setLoading(true);
          fetchData();
          message.success("Xóa thành công");
       } catch (error) {
-         console.log(error);
          message.error("Xóa thất bại");
          setLoading(true);
       }
-   }
+   };
 
    const fetchData = async () => {
       try {
@@ -107,8 +103,6 @@ const Order = () => {
             stt: index + 1,
          }));
          setOrderList(orderWithStt);
-         console.log(orderWithStt);
-         setLoading(true);
          const statusCounts = orders.reduce((acc, order) => {
             acc[order.orderStatus] = (acc[order.orderStatus] || 0) + 1;
             return acc;
@@ -142,7 +136,6 @@ const Order = () => {
          message.error("Không tìm thấy đơn hàng");
       }
    };
-   
 
    const handleCancel = () => {
       setIsModalVisible(false);
@@ -161,7 +154,6 @@ const Order = () => {
          setIsModalVisible(false);
          message.success("Cập nhật thành công");
       } catch (error) {
-         console.error('Error updating order:', error);
          message.error("Cập nhật thất bại");
       }
    };
@@ -201,6 +193,13 @@ const Order = () => {
       return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
    };
 
+   const exportToExcel = () => {
+      const ws = XLSX.utils.json_to_sheet(orderList);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Orders");
+      XLSX.writeFile(wb, "orders.xlsx");
+   };
+
    return (
       <div>
          {
@@ -208,6 +207,9 @@ const Order = () => {
                (
                   <div>
                      <ReactECharts option={option} style={{ height: '300px' }} />
+                     <Button onClick={exportToExcel} type="primary" style={{ marginBottom: '20px' }}>
+                        Xuất excel
+                     </Button>
                      <Table columns={columns} dataSource={orderList} />
                      <Modal
                         title="Edit Order"
@@ -216,7 +218,7 @@ const Order = () => {
                         onCancel={handleCancel}
                      >
                         <Form form={form} layout="vertical">
-                        <Form.Item name="id" label="Id">
+                           <Form.Item name="id" label="Id">
                               <Input disabled />
                            </Form.Item>
                            <Form.Item name="orderId" label="Id đơn hàng">

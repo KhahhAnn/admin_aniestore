@@ -98,7 +98,7 @@ const Dashboard = () => {
       },
       title: {
          show: true,
-         text: "Biểu đồ doanh thu tháng 5/2024",
+         text: "Biểu đồ doanh thu 2024",
          textStyle: {
             fontFamily: "monospace",
          }

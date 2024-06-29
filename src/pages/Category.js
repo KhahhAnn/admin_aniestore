@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Input, Skeleton, Table, message } from 'antd';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
+import * as XLSX from 'xlsx';
 
 const Category = () => {
    const [categoryList, setCategoryList] = useState([]);
@@ -27,8 +28,8 @@ const Category = () => {
          key: 'x',
          render: (id) => (
             <div>
-               <Button danger className='button-delete' onClick={() => handleDelete(id)}>Delete</Button>
-               <Button type="primary" className='button-edit' onClick={() => showEditModal(id)}>Edit</Button>
+               <Button danger className='button-delete' onClick={() => handleDelete(id)}>Xóa</Button>
+               <Button type="primary" className='button-edit' onClick={() => showEditModal(id)}>Sửa</Button>
             </div>
          ),
       },
@@ -37,7 +38,6 @@ const Category = () => {
    const handleDelete = async (id) => {
       try {
          setLoading(false);
-         console.log(id);
          const token = localStorage.getItem("token");
          await axios.delete(`http://localhost:8080/api/admin/category/${id}`, {
             headers: {
@@ -48,7 +48,6 @@ const Category = () => {
          setLoading(true);
          fetchData();
       } catch (error) {
-         console.log(error);
          message.error("Xóa loại sản phẩm thất bại");
          setLoading(true);
       }
@@ -66,30 +65,28 @@ const Category = () => {
             ...category,
             stt: index + 1,
          }));
-         console.log(categoryWithStt);
          setCategoryList(categoryWithStt);
          setLoading(true);
       } catch (error) {
-         console.error('Error fetching color:', error);
+         console.error('Error fetching categories:', error);
       }
    };
-
 
    useEffect(() => {
       fetchData();
    }, []);
 
    const showEditModal = (id) => {
-      const index = categoryList.findIndex(category => category.id === id);
-      const category = categoryList[index];
-      form.setFieldsValue({
-         id: category.id,
-         name: category.name
-      });
-      setEditingCategory(category);
-      setIsModalVisible(true);
+      const category = categoryList.find(category => category.id === id);
+      if (category) {
+         form.setFieldsValue({
+            id: category.id,
+            name: category.name
+         });
+         setEditingCategory(category);
+         setIsModalVisible(true);
+      }
    };
-
 
    const handleCancel = () => {
       setIsModalVisible(false);
@@ -98,7 +95,6 @@ const Category = () => {
    const handleOk = async () => {
       try {
          const updatedCategory = form.getFieldsValue();
-         console.log(updatedCategory);
          const token = localStorage.getItem("token");
          await axios.put(`http://localhost:8080/api/admin/category`, updatedCategory, {
             headers: {
@@ -110,9 +106,15 @@ const Category = () => {
          setIsModalVisible(false);
          message.success("Cập nhật loại sản phẩm thành công");
       } catch (error) {
-         console.error('Error updating category:', error);
          message.error("Cập nhật loại sản phẩm thất bại");
       }
+   };
+
+   const exportToExcel = () => {
+      const ws = XLSX.utils.json_to_sheet(categoryList);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Categories");
+      XLSX.writeFile(wb, "categories.xlsx");
    };
 
    return (
@@ -121,7 +123,10 @@ const Category = () => {
             loading ?
                (
                   <div>
-                     <Link to="../add-category"><button type="button" className="btn btn-success mb-3">Add Category</button></Link>
+                     <Link to="../add-category"><button type="button" className="btn btn-success mb-3">Thêm</button></Link>
+                     <Button onClick={exportToExcel} className='mb-3 btn btn-primary' type="primary" style={{ marginLeft: "20px" }}>
+                        Xuất excel
+                     </Button>
                      <Table columns={columns} dataSource={categoryList} />
                      <Modal
                         title="Edit Category"

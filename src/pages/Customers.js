@@ -2,6 +2,8 @@ import { Button, Form, Input, Modal, Skeleton, Switch, Table, message } from 'an
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import * as XLSX from 'xlsx';
+
 
 const Customers = () => {
    const [userList, setUserList] = useState([]);
@@ -20,7 +22,7 @@ const Customers = () => {
       };
       reader.readAsDataURL(imageFile);
    }
-   
+
 
    const columns = [
       {
@@ -72,7 +74,7 @@ const Customers = () => {
          key: 'x',
          render: (id) =>
             <div>
-               <Button type="primary" className='button-edit' onClick={() => showEditModal(id)}>Edit</Button>
+               <Button type="primary" className='button-edit' onClick={() => showEditModal(id)}>Sửa</Button>
             </div>,
       },
    ];
@@ -132,12 +134,23 @@ const Customers = () => {
       }
    };
 
+   const exportToExcel = () => {
+      const dataToExport = userList.map(({ imageSrc, ...rest }) => rest);
+      const ws = XLSX.utils.json_to_sheet(dataToExport);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Categories");
+      XLSX.writeFile(wb, "customer.xlsx");
+   };
+
    return (
       <>
          {
             loading ? (
                <div>
                   <Link to="../add-custommer"><button type="button" class="btn btn-success mb-3">Thêm tài khoản</button></Link>
+                  <Button onClick={exportToExcel} className='mb-3 btn btn-primary' type="primary" style={{ marginLeft: "20px" }}>
+                     Xuất excel
+                  </Button>
                   <Table
                      columns={columns}
                      expandable={{
@@ -167,7 +180,7 @@ const Customers = () => {
                            <Input />
                         </Form.Item>
                         <Form.Item name="email" label="Email">
-                           <Input disabled/>
+                           <Input disabled />
                         </Form.Item>
                         <Form.Item name="password" label="Password">
                            <Input.Password />

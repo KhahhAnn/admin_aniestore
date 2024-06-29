@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { Button, Form, Input, InputNumber, Modal, Pagination, Popconfirm, Select, Skeleton, Table, message } from 'antd';
+import { Button, Form, Input, InputNumber, Modal, Pagination, Popconfirm, Skeleton, Table, message } from 'antd';
 import axios from 'axios';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import * as XLSX from 'xlsx';
+
 
 const Products = () => {
    const [productList, setProductList] = useState([]);
@@ -157,6 +159,16 @@ const Products = () => {
    const handleCancel = () => {
       setIsModalVisible(false);
    };
+   const exportToExcel = () => {
+      const dataToExport = productList.map(({ imageUrl, ...rest }) => rest);
+
+      const ws = XLSX.utils.json_to_sheet(dataToExport);
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Products");
+
+      XLSX.writeFile(wb, "products.xlsx");
+   };
 
    return (
       <div>
@@ -164,6 +176,9 @@ const Products = () => {
             loading ? (
                <div>
                   <Link to="../add-product"><Button type="button" className="btn btn-success mb-3">Thêm Sản Phẩm</Button></Link>
+                  <Button onClick={exportToExcel} className='mb-3 btn btn-primary' type="primary" style={{ marginLeft: "20px" }}>
+                     Xuất excel
+                  </Button>
                   <Table columns={columns} dataSource={productList} pagination={false} />
                   <Pagination
                      style={{ marginTop: "30px", alignItems: "center", textAlign: "center" }}

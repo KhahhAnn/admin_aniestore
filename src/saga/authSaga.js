@@ -10,13 +10,18 @@ function isValidPassword(password) {
 
 function* loginUserWorker(action) {
    try {
+      debugger
       const { email, password } = action.payload;
       if (!isValidPassword(password)) {
-         yield put(loginFailure("Invalid password format. Password must contain at least one uppercase letter, one special character, and be at least 8 characters long."));
+         yield put(loginFailure("Định dạng mật khẩu không hợp lệ. Mật khẩu phải chứa ít nhất một chữ in hoa, một ký tự đặc biệt và dài ít nhất 8 ký tự."));
          return;
       }
       const response = yield call(axios.post, 'http://localhost:8080/auth/login', { email, password });
       if (response.data) {
+         if (!response.data.permission.includes('ROLE_ADMIN')) {
+            yield put(loginFailure("Tài khoản không có quyền truy cập."));
+            return;
+         }
          const token = response.data.jwt;  
          console.log(response.data);
          localStorage.setItem("token", token);
@@ -26,7 +31,7 @@ function* loginUserWorker(action) {
          action.payload.onSuccess();
       }
    } catch (error) {
-      yield put(loginFailure("Invalid username or password. Please try again."));
+      yield put(loginFailure("Sai tài khoản hoặc mật khẩu. Vui lòng thử lại."));
    }
 }
 
