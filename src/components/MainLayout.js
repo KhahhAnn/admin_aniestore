@@ -4,13 +4,13 @@ import React, { useEffect, useState } from 'react';
 import { AiOutlineDashboard, AiOutlinePicLeft, AiOutlinePicRight } from "react-icons/ai";
 import { BiCategoryAlt, BiSolidDiscount } from "react-icons/bi";
 import { CiUser } from "react-icons/ci";
-import { FaClipboardList, FaFileInvoiceDollar } from "react-icons/fa";
+import { FaClipboardList } from "react-icons/fa";
 import { FaStar } from "react-icons/fa6";
-import { GrCatalogOption, GrUserAdmin } from "react-icons/gr";
-import { IoNotifications } from "react-icons/io5";
-import { MdEventNote, MdProductionQuantityLimits } from "react-icons/md";
-import { Outlet, useNavigate } from 'react-router-dom';
+import { GrUserAdmin } from "react-icons/gr";
 import { ImExit } from "react-icons/im";
+import { IoNotifications } from "react-icons/io5";
+import { MdProductionQuantityLimits } from "react-icons/md";
+import { Outlet, useNavigate } from 'react-router-dom';
 
 
 const { Header, Sider, Content } = Layout;
@@ -79,44 +79,27 @@ const MainLayout = () => {
                   {
                      key: 'customers',
                      icon: <CiUser className='fs-4' />,
-                     label: 'Customers',
-                  },
-                  {
-                     key: 'catalog',
-                     icon: <GrCatalogOption className='fs-4' />,
-                     label: 'Catalog',
-                     children: [
-                        {
-                           key: 'event',
-                           icon: <MdEventNote className='fs-4' />,
-                           label: 'Event',
-                        },
-                        {
-                           key: 'discount',
-                           icon: <BiSolidDiscount className='fs-4' />,
-                           label: 'Discount',
-                        },
-                        {
-                           key: 'import-invoice',
-                           icon: <FaFileInvoiceDollar className='fs-4' />,
-                           label: 'Import Invoice',
-                        },
-                     ]
+                     label: 'Tài Khoản',
                   },
                   {
                      key: 'order',
                      icon: <FaClipboardList className='fs-4' />,
-                     label: 'Order',
+                     label: 'Hóa đơn',
+                  },
+                  {
+                     key: 'discount',
+                     icon: <BiSolidDiscount   className='fs-4' />,
+                     label: 'Giảm giá',
                   },
                   {
                      key: 'category',
                      icon: <BiCategoryAlt className='fs-4' />,
-                     label: 'Category',
+                     label: 'Loại mặt hàng',
                   },
                   {
                      key: 'products',
                      icon: <MdProductionQuantityLimits className='fs-4' />,
-                     label: 'Products',
+                     label: 'Sản phẩm',
                   },
                   {
                      key: 'review',
@@ -126,7 +109,7 @@ const MainLayout = () => {
                   {
                      key: '/',
                      icon: <ImExit  className='fs-4' />,
-                     label: 'Log out',
+                     label: 'Đăng xuất',
                      onClick: handleLogout,
                      style: {marginTop: "350px"}
                   },

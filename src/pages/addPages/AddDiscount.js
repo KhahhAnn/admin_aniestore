@@ -3,89 +3,127 @@ import {
    DatePicker,
    Form,
    Input,
-   InputNumber
+   InputNumber,
+   message,
 } from 'antd';
 import React from 'react';
+import axios from 'axios';
+
 const { RangePicker } = DatePicker;
-const formItemLayout = {
-   labelCol: {
-      xs: {
-         span: 24,
-      },
-      sm: {
-         span: 6,
-      },
-   },
-   wrapperCol: {
-      xs: {
-         span: 24,
-      },
-      sm: {
-         span: 14,
-      },
-   },
-};
-const AddDiscount = () => (
-   <Form
-      {...formItemLayout}
-      variant="filled"
-      style={{
-         maxWidth: 600,
-      }}
-   >
-      <Form.Item
-         label="Discount name"
-         name="Discount name"
-         rules={[
-            {
-               required: true,
-               message: 'Please input!',
-            },
-         ]}
-      >
-         <Input />
-      </Form.Item>
 
-      <Form.Item
-         label="Percent discount"
-         name="Percent discount"
-         rules={[
-            {
-               required: true,
-               message: 'Please input!',
-            },
-         ]}
-      >
-         <InputNumber
-            style={{
-               width: '100%',
-            }}
-         />
-      </Form.Item>
+const AddDiscount = () => {
+   const formItemLayout = {
+      labelCol: {
+         xs: {
+            span: 24,
+         },
+         sm: {
+            span: 6,
+         },
+      },
+      wrapperCol: {
+         xs: {
+            span: 24,
+         },
+         sm: {
+            span: 14,
+         },
+      },
+   };
+   const onFinish = async (values) => {
+      const { discountName, percentDiscount, rangeApply } = values;
+      const data = {
+         discountName,
+         percentDiscount,
+         applyDate: rangeApply[0].format('YYYY-MM-DD'),
+         expiry: rangeApply[1].format('YYYY-MM-DD'),
+      };
+      try {
+         const token = localStorage.getItem("token");
+         const response = await axios.post('http://localhost:8080/api/discount', data ,{
+            headers: {
+               "Authorization": `Bearer ${token}`,
+               "Content-Type": "application/json"
+            }
+         });
+         if (response.data.status) {
+            message.success(response.data.message);
+         } else {
+            message.error(response.data.message);
+         }
+      } catch (error) {
+         message.error('Đã xảy ra lỗi khi thêm mã giảm giá!');
+      }
+   };
 
-      <Form.Item
-         label="Range apply"
-         name="Range apply"
-         rules={[
-            {
-               required: true,
-               message: 'Please input!',
-            },
-         ]}
-      >
-         <RangePicker />
-      </Form.Item>
-
-      <Form.Item
-         wrapperCol={{
-            offset: 6,
-            span: 16,
+   return (
+      <Form
+         {...formItemLayout}
+         style={{
+            maxWidth: 600,
          }}
+         onFinish={onFinish}
       >
-         <Button type="primary" htmlType="submit">
-            Submit
-         </Button>
-      </Form.Item>
-   </Form>
-);
+         <Form.Item
+            name="discountName"
+            label="Mã giảm giá"
+            rules={[
+               {
+                  required: true,
+                  message: 'Vui lòng nhập mã giảm giá!',
+               },
+            ]}
+         >
+            <Input />
+         </Form.Item>
+
+         <Form.Item
+            name="percentDiscount"
+            label="Phần trăm giảm giá"
+            rules={[
+               {
+                  required: true,
+                  message: 'Vui lòng nhập phần trăm giảm giá!',
+               },
+               {
+                  type: 'number',
+                  min: 1,
+                  message: 'Phần trăm giảm giá phải lớn hơn 0!',
+               },
+            ]}
+         >
+            <InputNumber
+               style={{
+                  width: '100%',
+               }}
+            />
+         </Form.Item>
+
+         <Form.Item
+            name="rangeApply"
+            label="Ngày áp dụng"
+            rules={[
+               {
+                  required: true,
+                  message: 'Vui lòng chọn khoảng thời gian áp dụng!',
+               },
+            ]}
+         >
+            <RangePicker />
+         </Form.Item>
+
+         <Form.Item
+            wrapperCol={{
+               offset: 6,
+               span: 16,
+            }}
+         >
+            <Button type="primary" htmlType="submit">
+               Thêm
+            </Button>
+         </Form.Item>
+      </Form>
+   );
+};
+
 export default AddDiscount;

@@ -66,7 +66,6 @@ const AddProduct = () => {
 
    const handleSubmit = async (values) => {
       try {
-         console.log(values);
          const token = localStorage.getItem("token");
          await axios.post('http://localhost:8080/api/admin/products/add', values, {
             headers: {

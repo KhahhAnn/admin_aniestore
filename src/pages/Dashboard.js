@@ -1,14 +1,22 @@
-import { Skeleton, Table } from 'antd';
+import { Skeleton, Table, DatePicker } from 'antd';
 import axios from 'axios';
 import ReactECharts from 'echarts-for-react';
 import React, { useEffect, useState } from 'react';
 import { FaArrowTrendDown, FaArrowTrendUp } from "react-icons/fa6";
+import dayjs from 'dayjs';
+
+const { RangePicker } = DatePicker;
 
 const Dashboard = () => {
+   const currentYear = dayjs().year();
    const [orderList, setOrderList] = useState([]);
    const [loading, setLoading] = useState(false);
    const [chartData, setChartData] = useState([]);
-
+   const [allOrders, setAllOrders] = useState([]);
+   const [dateRange, setDateRange] = useState([
+      dayjs(`${currentYear}-01-01`),
+      dayjs()
+   ]);
    const columns = [
       {
          title: 'STT',
@@ -24,6 +32,11 @@ const Dashboard = () => {
          title: 'Ngày bán',
          key: "orderDate",
          dataIndex: 'orderDate',
+      },
+      {
+         title: 'Phương thức thanh toán',
+         key: "isPayment",
+         dataIndex: 'isPayment',
       },
       {
          title: 'Trạng thái đơn hàng',
@@ -42,24 +55,48 @@ const Dashboard = () => {
       },
    ];
 
+   const handleDateChange = (dates) => {
+      setDateRange(dates);
+      filterOrders(dates);
+   };
+
    const fetchData = async () => {
       try {
+         setLoading(false);
          const token = localStorage.getItem("token");
+
          const response = await axios.get('http://localhost:8080/order', {
             headers: {
                "Authorization": `Bearer ${token}`
             }
          });
-         const orderWithStt = response.data._embedded.orders.reverse().map((order, index) => ({
+
+         const orders = response.data._embedded.orders.reverse().map((order, index) => ({
             ...order,
             stt: index + 1,
          }));
-         setOrderList(orderWithStt);
+         
+         setAllOrders(orders);
          setLoading(true);
-         formatChartData(orderWithStt);
+         filterOrders(dateRange, orders);
       } catch (error) {
          setLoading(true);
          console.error('Error fetching orders:', error);
+      }
+   };
+
+   const filterOrders = (dates, orders = allOrders) => {
+      if (dates && dates.length === 2) {
+         const [start, end] = dates;
+         const filteredOrders = orders.filter(order => {
+            const orderDate = dayjs(order.orderDate);
+            return orderDate.isAfter(start, 'day') && orderDate.isBefore(end, 'day');
+         });
+         setOrderList(filteredOrders);
+         formatChartData(filteredOrders);
+      } else {
+         setOrderList(orders);
+         formatChartData(orders);
       }
    };
 
@@ -86,7 +123,6 @@ const Dashboard = () => {
    useEffect(() => {
       fetchData();
    }, []);
-
 
    const option = {
       xAxis: {
@@ -126,40 +162,40 @@ const Dashboard = () => {
       }).format(value);
    };
    
-
    return (
       <div>
          <h3 className='mb-4'>Dashboard</h3>
-         <div className='d-flex justify-content-between align-items-center gap-3'>
+         {/* <div className='d-flex justify-content-between align-items-center gap-3 mt-3'>
             <div className='d-flex justify-content-between align-items-end flex-grow-1 bg-white p-3 rounded-3'>
                <div>
-                  <p>Total</p> <h4 className='mb-0'>$1100</h4>
+                  <p>Tổng</p> <h4 className='mb-0'>$1100</h4>
                </div>
                <div className='d-flex flex-column align-items-end'>
                   <h6> <FaArrowTrendUp />32%</h6>
-                  <p className='mb-0'>Compare To 2023</p>
+                  <p className='mb-0'>So với 2023</p>
                </div>
             </div>
             <div className='d-flex justify-content-between align-items-end flex-grow-1 bg-white p-3 rounded-3'>
                <div>
-                  <p>Total</p> <h4 className='mb-0'>$1100</h4>
+                  <p>Tổng</p> <h4 className='mb-0'>$1100</h4>
                </div>
                <div className='d-flex flex-column align-items-end'>
                   <h6 className='red'> <FaArrowTrendDown />32%</h6>
-                  <p className='mb-0'>Compare To 2023</p>
+                  <p className='mb-0'>So với 2022</p>
                </div>
             </div>
             <div className='d-flex justify-content-between align-items-end flex-grow-1 bg-white p-3 rounded-3'>
                <div>
-                  <p>Total</p> <h4 className='mb-0'>$1100</h4>
+                  <p>Tổng</p> <h4 className='mb-0'>$1100</h4>
                </div>
                <div className='d-flex flex-column align-items-end'>
                   <h6 className='green'> <FaArrowTrendUp />32%</h6>
-                  <p className='mb-0'>Compare To 2022</p>
+                  <p className='mb-0'>So với 2021</p>
                </div>
             </div>
-         </div>
-         <ReactECharts option={option} style={{ height: '300px', marginTop: "100px" }} />
+         </div> */}
+         <RangePicker style={{marginTop: "50px"}} picker="month" onChange={handleDateChange}  defaultValue={[dayjs(`${currentYear}-01-01`), dayjs()]}/>
+         <ReactECharts option={option} style={{ height: '300px', marginTop: "50px" }} />
          <div className='mt-4'>
             <h3 className='mb-4'>Danh sách order</h3>
             <div>
