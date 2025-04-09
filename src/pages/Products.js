@@ -20,7 +20,7 @@ const Products = () => {
    const fetchData = async (page = 1) => {
       try {
          const token = localStorage.getItem("token");
-         const response = await axios.get(`http://localhost:8080/product?page=${page}&size=10`, {
+         const response = await axios.get(`http://localhost:8080/product?page=${page - 1}&size=10`, {
             headers: {
                "Authorization": `Bearer ${token}`
             }
@@ -30,7 +30,7 @@ const Products = () => {
          setTotalPage(pageInfo.totalPages);
          setProductList(products.reverse().map((product, index) => ({
             ...product,
-            stt: index + 1 + (page - 1) * 20, // tính stt của sản phẩm trên toàn bộ danh sách
+            stt: index + 1 + (page - 1) * 10, // tính stt của sản phẩm trên toàn bộ danh sách
          })));
          setLoading(true);
       } catch (error) {

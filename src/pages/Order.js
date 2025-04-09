@@ -1,4 +1,4 @@
-import { Button, DatePicker, Form, Input, Modal, Popconfirm, Select, Skeleton, Table, message } from 'antd';
+import { Button, DatePicker, Form, Input, Modal, Pagination, Popconfirm, Select, Skeleton, Table, message } from 'antd';
 import axios from 'axios';
 import ReactECharts from 'echarts-for-react';
 import React, { useEffect, useState } from 'react';
@@ -18,34 +18,42 @@ const Order = () => {
    const [totalOrders, setTotalOrders] = useState(0);
    const [selectedMonth, setSelectedMonth] = useState(dayjs());
    const [productSales, setProductSales] = useState([]);
+   const [totalElement, setTotalElement] = useState(0);
+   const [currentPage, setCurrentPage] = useState(1);
+
+   const handlePageChange = async (page) => {
+      try {
+         setCurrentPage(page);
+         setLoading(false);
+         await fetchData(page);
+      } catch (error) {
+         console.error('Error fetching products:', error);
+      }
+   };
 
    useEffect(() => {
       const fetchOrderData = async () => {
          try {
             setLoading(false);
             const token = localStorage.getItem("token");
-            const response = await axios.get('http://localhost:8080/order', {
+            const response = await axios.get('http://localhost:8080/order?size=100', {
                headers: {
                   "Authorization": `Bearer ${token}`
                }
             });
             const orders = response.data._embedded.orders;
-   
-            // Lọc các đơn hàng theo tháng được chọn
+
             const filteredOrders = orders.filter(order => {
                const orderDate = dayjs(order.createdAt);
                const formattedDate = orderDate.format('YYYY-MM');
                const formattedSelectedMonth = selectedMonth.format('YYYY-MM');
-               return formattedDate === formattedSelectedMonth; // Chỉ lấy đơn hàng trong tháng được chọn
+               return formattedDate === formattedSelectedMonth; 
             });
-   
-            // Khởi tạo lại mảng productSales mỗi khi tháng thay đổi
             const newSales = [];
    
-            // Duyệt qua các đơn hàng đã lọc và lấy orderItems
             for (const order of filteredOrders) {
                const orderItemsUrl = order._links.orderItems.href;
-   
+
                // Lấy thông tin các mặt hàng trong đơn hàng
                const orderItemsResponse = await axios.get(orderItemsUrl, {
                   headers: {
@@ -53,11 +61,11 @@ const Order = () => {
                   }
                });
                const orderItems = orderItemsResponse.data._embedded.orderItems;
-   
+
                // Duyệt qua các mặt hàng và lấy thông tin sản phẩm
                for (const item of orderItems) {
                   const productUrl = item._links.product.href;
-   
+
                   // Lấy thông tin sản phẩm (title)
                   const productResponse = await axios.get(productUrl, {
                      headers: {
@@ -66,7 +74,7 @@ const Order = () => {
                   });
                   const product = productResponse.data;
                   const productTitle = product.title; // Lấy title sản phẩm
-   
+
                   // Cộng dồn số lượng bán cho sản phẩm
                   const productIndex = newSales.findIndex(sale => sale.title === productTitle);
                   if (productIndex !== -1) {
@@ -78,17 +86,17 @@ const Order = () => {
                   }
                }
             }
-   
+
             // Cập nhật lại mảng productSales với dữ liệu mới
             setProductSales(newSales);
             setLoading(true);
-   
+
          } catch (error) {
             console.error('Error fetching data:', error);
             setLoading(true);
          }
       };
-   
+
       // Gọi hàm fetchOrderData mỗi khi selectedMonth thay đổi
       fetchOrderData();
    }, [selectedMonth]);
@@ -174,16 +182,17 @@ const Order = () => {
       }
    };
 
-   const fetchData = async () => {
+   const fetchData = async (page = 1) => {
       try {
          setLoading(false);
          const token = localStorage.getItem("token");
-         const response = await axios.get('http://localhost:8080/order', {
+         const response = await axios.get(`http://localhost:8080/order?page=${page - 1}&size=20`, {
             headers: {
                Authorization: `Bearer ${token}`,
             },
          });
-         const orders = response.data._embedded.orders;
+         const { page: pageInfo, _embedded: { orders } } = response.data;
+         setTotalElement(pageInfo.totalElements);
          const orderWithStt = orders.reverse().map((order, index) => ({
             ...order,
             stt: index + 1,
@@ -346,7 +355,14 @@ const Order = () => {
                   <Button onClick={exportToExcel} type="primary" style={{ marginBottom: '20px' }}>
                      Xuất excel
                   </Button>
-                  <Table columns={columns} dataSource={orderList} />
+                  <Table columns={columns} dataSource={orderList} pagination={false} />
+                  <Pagination
+                     style={{ marginTop: "30px", alignItems: "center", textAlign: "center" }}
+                     total={totalElement}
+                     pageSize={20}
+                     current={currentPage}
+                     onChange={handlePageChange}
+                  />
                   <Modal
                      title="Chỉnh sửa đơn hàng"
                      open={isModalVisible}

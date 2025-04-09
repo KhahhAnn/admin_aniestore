@@ -1,4 +1,4 @@
-import { Skeleton, Table, DatePicker } from 'antd';
+import { Skeleton, Table, DatePicker, Pagination } from 'antd';
 import axios from 'axios';
 import ReactECharts from 'echarts-for-react';
 import React, { useEffect, useState } from 'react';
@@ -13,6 +13,21 @@ const Dashboard = () => {
    const [loading, setLoading] = useState(false);
    const [chartData, setChartData] = useState([]);
    const [allOrders, setAllOrders] = useState([]);
+   const [totalElement, setTotalElement] = useState(0);
+   const [currentPage, setCurrentPage] = useState(1);
+   const [totalPage, setTotalPage] = useState(0);
+
+
+   const handlePageChange = async (page) => {
+      try {
+         setCurrentPage(page);
+         setLoading(false);
+         await fetchData(page);
+      } catch (error) {
+         console.error('Error fetching products:', error);
+      }
+   };
+
    const [dateRange, setDateRange] = useState([
       dayjs(`${currentYear}-01-01`),
       dayjs()
@@ -60,24 +75,29 @@ const Dashboard = () => {
       filterOrders(dates);
    };
 
-   const fetchData = async () => {
+   const fetchData = async (page = 1) => {
       try {
          setLoading(false);
          const token = localStorage.getItem("token");
 
-         const response = await axios.get('http://localhost:8080/order', {
+         const response = await axios.get(`http://localhost:8080/order?page=${page - 1}&size=10`, {
             headers: {
                "Authorization": `Bearer ${token}`
             }
          });
-
-         const orders = response.data._embedded.orders.reverse().map((order, index) => ({
+         const { page: pageInfo, _embedded: { orders } } = response.data;
+         setTotalElement(pageInfo.totalElements);
+         setTotalPage(pageInfo.totalPages);
+         setAllOrders(orders.reverse().map((order, index) => ({
             ...order,
-            stt: index + 1,
-         }));
-         
-         setAllOrders(orders);
+            stt: index + 1 + (page - 1) * 10
+         })));
          setLoading(true);
+         setOrderList(orders.reverse().map((order, index) => ({
+            ...order,
+            stt: index + 1 + (page - 1) * 10
+         })));
+
          filterOrders(dateRange, orders);
       } catch (error) {
          setLoading(true);
@@ -86,19 +106,28 @@ const Dashboard = () => {
    };
 
    const filterOrders = (dates, orders = allOrders) => {
+      let filteredOrders = [];
+
       if (dates && dates.length === 2) {
          const [start, end] = dates;
-         const filteredOrders = orders.filter(order => {
+         filteredOrders = orders.filter(order => {
             const orderDate = dayjs(order.orderDate);
             return orderDate.isAfter(start, 'day') && orderDate.isBefore(end, 'day');
          });
-         setOrderList(filteredOrders);
-         formatChartData(filteredOrders);
       } else {
-         setOrderList(orders);
-         formatChartData(orders);
+         filteredOrders = orders;
       }
+
+      // Cập nhật lại STT
+      const ordersWithSTT = filteredOrders.map((order, index) => ({
+         ...order,
+         stt: index + 1,
+      }));
+
+      setOrderList(ordersWithSTT);
+      formatChartData(ordersWithSTT);
    };
+
 
    const formatChartData = (orders) => {
       const aggregatedData = orders.reduce((acc, order) => {
@@ -134,11 +163,14 @@ const Dashboard = () => {
       },
       title: {
          show: true,
-         text: "Biểu đồ doanh thu 2024",
+         text: Array.isArray(dateRange) && dateRange[0] && dateRange[1]
+            ? `Biểu đồ doanh thu từ ${dateRange[0].format('MM/YYYY')} đến ${dateRange[1].format('MM/YYYY')}`
+            : 'Biểu đồ doanh thu',
+
          textStyle: {
             fontFamily: "monospace",
          }
-      }, 
+      },
       tooltip: {
          show: true,
          trigger: 'axis',
@@ -161,47 +193,25 @@ const Dashboard = () => {
          currency: 'VND',
       }).format(value);
    };
-   
+
    return (
       <div>
          <h3 className='mb-4'>Dashboard</h3>
-         {/* <div className='d-flex justify-content-between align-items-center gap-3 mt-3'>
-            <div className='d-flex justify-content-between align-items-end flex-grow-1 bg-white p-3 rounded-3'>
-               <div>
-                  <p>Tổng</p> <h4 className='mb-0'>$1100</h4>
-               </div>
-               <div className='d-flex flex-column align-items-end'>
-                  <h6> <FaArrowTrendUp />32%</h6>
-                  <p className='mb-0'>So với 2023</p>
-               </div>
-            </div>
-            <div className='d-flex justify-content-between align-items-end flex-grow-1 bg-white p-3 rounded-3'>
-               <div>
-                  <p>Tổng</p> <h4 className='mb-0'>$1100</h4>
-               </div>
-               <div className='d-flex flex-column align-items-end'>
-                  <h6 className='red'> <FaArrowTrendDown />32%</h6>
-                  <p className='mb-0'>So với 2022</p>
-               </div>
-            </div>
-            <div className='d-flex justify-content-between align-items-end flex-grow-1 bg-white p-3 rounded-3'>
-               <div>
-                  <p>Tổng</p> <h4 className='mb-0'>$1100</h4>
-               </div>
-               <div className='d-flex flex-column align-items-end'>
-                  <h6 className='green'> <FaArrowTrendUp />32%</h6>
-                  <p className='mb-0'>So với 2021</p>
-               </div>
-            </div>
-         </div> */}
-         <RangePicker style={{marginTop: "50px"}} picker="month" onChange={handleDateChange}  defaultValue={[dayjs(`${currentYear}-01-01`), dayjs()]}/>
+         <RangePicker style={{ marginTop: "50px" }} picker="month" onChange={handleDateChange} defaultValue={[dayjs(`${currentYear}-01-01`), dayjs()]} />
          <ReactECharts option={option} style={{ height: '300px', marginTop: "50px" }} />
          <div className='mt-4'>
             <h3 className='mb-4'>Danh sách order</h3>
             <div>
                {
-                  loading ? (<Table columns={columns} dataSource={orderList} />) : (<Skeleton active />)
+                  loading ? (<Table columns={columns} dataSource={allOrders} pagination={false} />) : (<Skeleton active />)
                }
+               <Pagination
+                  style={{ marginTop: "30px", alignItems: "center", textAlign: "center" }}
+                  total={totalElement}
+                  pageSize={10}
+                  current={currentPage}
+                  onChange={handlePageChange}
+               />
             </div>
          </div>
       </div>
