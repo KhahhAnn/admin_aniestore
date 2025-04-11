@@ -10,7 +10,6 @@ function isValidPassword(password) {
 
 function* loginUserWorker(action) {
    try {
-      debugger
       const { email, password } = action.payload;
       if (!isValidPassword(password)) {
          yield put(loginFailure("Định dạng mật khẩu không hợp lệ. Mật khẩu phải chứa ít nhất một chữ in hoa, một ký tự đặc biệt và dài ít nhất 8 ký tự."));
