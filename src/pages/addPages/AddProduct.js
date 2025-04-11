@@ -10,7 +10,7 @@ import {
 } from 'antd';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const formItemLayout = {
    labelCol: {
@@ -37,6 +37,7 @@ const AddProduct = () => {
    const [categoryList, setCategoryList] = useState([]);
    const [form] = Form.useForm();
    const [file, setFile] = useState(null);
+   const navigate = useNavigate();
 
    const handleChange = (e) => {
       const imageFile = e.target.files[0];
@@ -76,6 +77,7 @@ const AddProduct = () => {
 
          message.success("Product added successfully!");
          form.resetFields();
+         navigate("../products")
       } catch (error) {
          console.error('Error adding product:', error);
          message.error("Failed to add product.");

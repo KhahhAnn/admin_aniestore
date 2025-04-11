@@ -1,4 +1,4 @@
-import { Button, Popconfirm, Table, Skeleton, message } from 'antd';
+import { Button, Popconfirm, Table, Skeleton, message, Pagination } from 'antd';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import ReactECharts from 'echarts-for-react';
@@ -11,21 +11,25 @@ const Review = () => {
    const [goodReviews, setGoodReviews] = useState(0);
    const [averageReviews, setAverageReviews] = useState(0);
    const [poorReviews, setPoorReviews] = useState(0);
+   const [totalElement, setTotalElement] = useState(0);
+   const [currentPage, setCurrentPage] = useState(1);
+
 
    useEffect(() => {
       fetchData();
    }, []);
 
-   const fetchData = async () => {
+   const fetchData = async (page = 1) => {
       try {
          const token = localStorage.getItem("token");
-         const response = await axios.get('http://localhost:8080/review', {
+         const response = await axios.get(`http://localhost:8080/review?page=${page - 1}&size=10`, {
             headers: {
                "Authorization": `Bearer ${token}`
             }
          });
 
-         console.log(response.data);
+         const { page: pageInfo} = response.data;
+         setTotalElement(pageInfo.totalElements); 
 
          const reviewListWithStt = response.data._embedded.reviews.reverse().map((review, index) => ({
             ...review,
@@ -204,6 +208,16 @@ const Review = () => {
       handleDelete(id);
    };
 
+   const handlePageChange = async (page) => {
+      try {
+         setCurrentPage(page);
+         setLoading(false);
+         await fetchData(page);
+      } catch (error) {
+         console.error('Error fetching products:', error);
+      }
+   };
+
    return (
       <>
          {loading ? (
@@ -212,7 +226,14 @@ const Review = () => {
                <Button onClick={exportToExcel} type="primary" style={{ marginBottom: '20px' }}>
                   Xuất excel
                </Button>
-               <Table columns={columns} dataSource={reviewList} />
+               <Table columns={columns} dataSource={reviewList} pagination={false} />
+               <Pagination
+                  style={{ marginTop: "30px", alignItems: "center", textAlign: "center" }}
+                  total={totalElement - 1}
+                  pageSize={10}
+                  current={currentPage}
+                  onChange={handlePageChange}
+               />
             </div>
          ) : (
             <Skeleton active />

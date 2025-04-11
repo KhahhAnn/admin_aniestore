@@ -30,7 +30,7 @@ const Products = () => {
          setTotalPage(pageInfo.totalPages);
          setProductList(products.reverse().map((product, index) => ({
             ...product,
-            stt: index + 1 + (page - 1) * 10, // tính stt của sản phẩm trên toàn bộ danh sách
+            stt: index + 1 + (page - 1) * 10,
          })));
          setLoading(true);
       } catch (error) {

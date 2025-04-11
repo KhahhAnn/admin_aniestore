@@ -8,10 +8,13 @@ import {
 } from 'antd';
 import React from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const { RangePicker } = DatePicker;
 
 const AddDiscount = () => {
+   const navigate = useNavigate();
+
    const formItemLayout = {
       labelCol: {
          xs: {
@@ -40,7 +43,7 @@ const AddDiscount = () => {
       };
       try {
          const token = localStorage.getItem("token");
-         const response = await axios.post('http://localhost:8080/api/discount', data ,{
+         const response = await axios.post('http://localhost:8080/api/discount', data, {
             headers: {
                "Authorization": `Bearer ${token}`,
                "Content-Type": "application/json"
@@ -48,6 +51,7 @@ const AddDiscount = () => {
          });
          if (response.data.status) {
             message.success(response.data.message);
+            navigate("../discount")
          } else {
             message.error(response.data.message);
          }
